@@ -47,6 +47,15 @@
 #define SOC_GPIO_PIN_SCK_T5S  18
 #define SOC_GPIO_PIN_SS_T5S   5
 
+#if defined(TFT_ST7789)
+/* ESP32 and ST7789 SPI pins mapping */
+#define SOC_GPIO_PIN_SS_TFT     5
+#define SOC_GPIO_PIN_MOSI_TFT   23
+#define SOC_GPIO_PIN_MISO_TFT   12
+#define SOC_GPIO_PIN_SCK_TFT    18
+#define SOC_GPIO_PIN_DC_TFT     16
+#endif /* TFT_ST7789 */
+
 /* Waveshare ESP32 SPI pins mapping */
 #define SOC_GPIO_PIN_MOSI_WS  14
 #define SOC_GPIO_PIN_MISO_WS  12

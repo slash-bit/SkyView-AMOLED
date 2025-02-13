@@ -48,6 +48,7 @@
 #define TIME_TO_SLEEP  28        /* Time ESP32 will go to sleep (in seconds) */
 
 WebServer server ( 80 );
+
 #if defined(USE_EPAPER)
 /*
  * TTGO-T5S. Pin definition

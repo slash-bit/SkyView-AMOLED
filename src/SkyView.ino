@@ -49,6 +49,7 @@
 #include "WebHelper.h"
 #include "BatteryHelper.h"
 #include "GDL90Helper.h"
+#include "TFTHelper.h"
 
 #include "SkyView.h"
 // #include "TFTHelper.h"
@@ -116,6 +117,9 @@ void setup()
   Serial.flush();
 #if defined(USE_EPAPER)
   hw_info.display = EPD_setup(true);
+#elif defined(USE_TFT)
+  TFT_setup();  
+  hw_info.display = DISPLAY_TFT;
 #endif /* USE_EPAPER */
   if (hw_info.display != DISPLAY_NONE) {
     Serial.println(F(" done."));
@@ -148,6 +152,8 @@ void loop()
   Traffic_loop();
 #if defined(USE_EPAPER)
   EPD_loop();
+#elif defined(USE_TFT)
+  TFT_loop(); 
 #endif /* USE_EPAPER */
   Traffic_ClearExpired();
 
