@@ -39,10 +39,12 @@ typedef struct SoC_ops_struct {
   void (*WiFiUDP_stopAll)();
   void (*Battery_setup)();
   float (*Battery_voltage)();
+#if defined(USE_EPAPER)
   void (*EPD_setup)();
   void (*EPD_fini)();
   bool (*EPD_is_ready)();
   void (*EPD_update)(int);
+#endif
   size_t (*WiFi_Receive_UDP)(uint8_t *, size_t);
   void (*WiFi_Transmit_UDP)(int, byte *, size_t);
   int  (*WiFi_clients_count)();

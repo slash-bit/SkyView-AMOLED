@@ -114,7 +114,9 @@ void setup()
   Serial.println();
   Serial.print(F("Intializing E-ink display module (may take up to 10 seconds)... "));
   Serial.flush();
+#if defined(USE_EPAPER)
   hw_info.display = EPD_setup(true);
+#endif /* USE_EPAPER */
   if (hw_info.display != DISPLAY_NONE) {
     Serial.println(F(" done."));
   } else {
@@ -144,9 +146,9 @@ void loop()
   Input_loop();
 
   Traffic_loop();
-
+#if defined(USE_EPAPER)
   EPD_loop();
-
+#endif /* USE_EPAPER */
   Traffic_ClearExpired();
 
   WiFi_loop();
@@ -179,9 +181,9 @@ void shutdown(const char *msg)
   SoC->DB_fini();
 
   WiFi_fini();
-
+#if defined(USE_EPAPER)
   EPD_fini(msg);
-
+#endif /* USE_EPAPER */
   SoC->Button_fini();
 
   SoC_fini();

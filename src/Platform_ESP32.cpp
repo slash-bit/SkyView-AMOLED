@@ -48,7 +48,7 @@
 #define TIME_TO_SLEEP  28        /* Time ESP32 will go to sleep (in seconds) */
 
 WebServer server ( 80 );
-
+#if defined(USE_EPAPER)
 /*
  * TTGO-T5S. Pin definition
 
@@ -110,6 +110,7 @@ P                       0,2,4,5,12,13,14,15,16,17,18,19,21,22,23,25,26,27,32,33,
  */
 GxEPD2_BW<GxEPD2_270, GxEPD2_270::HEIGHT> epd_waveshare_W3(GxEPD2_270(/*CS=15*/ 15, /*DC=*/ 27, /*RST=*/ 26, /*BUSY=*/ 25));
 GxEPD2_BW<GxEPD2_270_T91, GxEPD2_270_T91::HEIGHT> epd_waveshare_T91(GxEPD2_270_T91(/*CS=15*/ 15, /*DC=*/ 27, /*RST=*/ 26, /*BUSY=*/ 25));
+#endif
 
 static union {
   uint8_t efuse_mac[6];
@@ -357,7 +358,7 @@ SoftSPI swSPI(SOC_GPIO_PIN_MOSI_T5S,
               SOC_GPIO_PIN_SCK_T5S);
 
 static portMUX_TYPE EPD_ident_mutex;
-
+#if defined(USE_EPAPER)
 //static ep_model_id ESP32_EPD_ident()
 static int ESP32_EPD_ident()
 {
@@ -488,6 +489,7 @@ static void ESP32_EPD_update(int val)
 //  EPD_Update_Sync(val);
   EPD_task_command = val;
 }
+#endif /* USE_EPAPER */
 
 static size_t ESP32_WiFi_Receive_UDP(uint8_t *buf, size_t max_size)
 {
@@ -940,12 +942,12 @@ static void ESP32_TTS(char *message)
         //Serial.print(F("no SD card"));
         return;
       }
-
+#if defined(USE_EPAPER)
       while (!SoC->EPD_is_ready()) {yield();}
       EPD_Message("VOICE", "ALERT");
       SoC->EPD_update(EPD_UPDATE_FAST);
       while (!SoC->EPD_is_ready()) {yield();}
-
+#endif /* USE_EPAPER */
       bool wdt_status = loopTaskWDTEnabled;
 
       if (wdt_status) {
@@ -1049,11 +1051,17 @@ void handleEvent(AceButton* button, uint8_t eventType,
       break;
     case AceButton::kEventReleased:
       if (button == &button_mode) {
+#if defined(USE_EPAPER)
         EPD_Mode();
+#endif /* USE_EPAPER */
       } else if (button == &button_up) {
+#if defined(USE_EPAPER)
         EPD_Up();
+#endif /* USE_EPAPER */
       } else if (button == &button_down) {
+#if defined(USE_EPAPER)
         EPD_Down();
+#endif /* USE_EPAPER */
       }
       break;
     case AceButton::kEventLongPressed:
@@ -1168,10 +1176,12 @@ const SoC_ops_t ESP32_ops = {
   ESP32_WiFiUDP_stopAll,
   ESP32_Battery_setup,
   ESP32_Battery_voltage,
+#if defined(USE_EPAPER)
   ESP32_EPD_setup,
   ESP32_EPD_fini,
   ESP32_EPD_is_ready,
   ESP32_EPD_update,
+#endif
   ESP32_WiFi_Receive_UDP,
   ESP32_WiFi_Transmit_UDP,
   ESP32_WiFi_clients_count,
