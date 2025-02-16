@@ -36,8 +36,8 @@
 #define SerialInput           Serial1
 
 /* Peripherals */
-#define SOC_GPIO_PIN_GNSS_RX  21
-#define SOC_GPIO_PIN_GNSS_TX  22
+#define SOC_GPIO_PIN_GNSS_RX  1
+#define SOC_GPIO_PIN_GNSS_TX  3
 
 #define SOC_BUTTON_MODE_DEF   0
 
@@ -74,12 +74,12 @@
 #define SOC_GPIO_PIN_DOUT     19
 
 /* TTGO T5S buttons mapping */
-#define SOC_BUTTON_MODE_T5S   37
-#define SOC_BUTTON_UP_T5S     38
-#define SOC_BUTTON_DOWN_T5S   39
+#define SOC_BUTTON_MODE_T5S   26
+#define SOC_BUTTON_UP_T5S     22
+#define SOC_BUTTON_DOWN_T5S   21
 
 /* TTGO T5S green LED mapping */
-#define SOC_GPIO_PIN_LED_T5S  22
+#define SOC_GPIO_PIN_LED_T5S  2
 
 /* Boya Microelectronics Inc. */
 #define BOYA_ID               0x68

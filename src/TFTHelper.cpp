@@ -5,13 +5,22 @@
 #include "EEPROMHelper.h"
 #include "TrafficHelper.h"
 #include "TFTHelper.h"
+#include <Fonts/FreeSerifBold24pt7b.h>
 #include <Adafruit_GFX.h>    // Core graphics library
 #include <Adafruit_ST7789.h> // Hardware-specific library for ST7789
 #include <Adafruit_ST77xx.h> // Hardware-specific library for ST7789
+#include <Fonts/FreeSansBold9pt7b.h> // Include the missing font
+#include <Fonts/FreeSans24pt7b.h> // Include the missing font
 
 #include "SkyView.h"
 static int TFT_view_mode = 0;
+unsigned long EPDTimeMarker = 0;
+bool EPD_display_frontpage = false;
 
+static int EPD_view_mode = 0;
+static unsigned long EPD_anti_ghosting_timer = 0;
+
+volatile int EPD_task_command = EPD_UPDATE_NONE;
 
 
 // TFT_eSPI tft = TFT_eSPI();
@@ -21,18 +30,73 @@ unsigned long drawTime = 0;
 
 void TFT_setup(void) {
   tft.init(240, 320); // Initialize with width and height
-  tft.setRotation(1);
-
-
-    TFT_view_mode = settings->vmode;
-
-
+  tft.setRotation(0);
+  TFT_view_mode = settings->vmode;
   tft.fillScreen(ST77XX_BLACK);
-  tft.setTextSize(3);
-  tft.setTextColor(ST77XX_BLUE);
-  tft.fillRect(0, 0, 320, 30, ST77XX_BLUE);
-//   tft.setTextDatum(TC_DATUM);
-  tft.println("SkyView"); // Font 4 for fast drawing with background
-  delay(4000);
+  tft.setFont(&FreeSans24pt7b);
+  tft.setCursor(20, 80);
+  tft.println("SkyView");
+  delay(1000);
+  tft.setFont(&FreeSansBold9pt7b);
+  tft.setCursor(25, 110);
+  tft.print("powered by SoftRF");
+  delay(3000);
+  tft.setCursor(0, 0);
+  tft.setFont();
+
+  tft.setFont();
+  delay(3000);
+  TFT_radar_setup();
+}
+void TFT_loop(void) {
+   TFT_radar_loop();
+}
+
+void TFT_Mode()
+{
+  if (hw_info.display == DISPLAY_TFT) {
+
+    if (EPD_view_mode == VIEW_MODE_RADAR) {
+      EPD_view_mode = VIEW_MODE_TEXT;
+      EPD_display_frontpage = false;
+    }  else if (EPD_view_mode == VIEW_MODE_TEXT) {
+      EPD_view_mode = VIEW_MODE_RADAR;
+      EPD_display_frontpage = false;
+    }
+  }
+}
+
+void TFT_Up()
+{
+  if (hw_info.display == DISPLAY_TFT) {
+    switch (EPD_view_mode)
+    {
+    case VIEW_MODE_RADAR:
+      TFT_radar_unzoom();
+      break;
+    case VIEW_MODE_TEXT:
+      TFT_text_prev();
+      break;
+    default:
+      break;
+    }
+  }
+}
+
+void TFT_Down()
+{
+  if (hw_info.display == DISPLAY_TFT) {
+    switch (EPD_view_mode)
+    {
+    case VIEW_MODE_RADAR:
+      TFT_radar_zoom();
+      break;
+    case VIEW_MODE_TEXT:
+      TFT_text_next();
+      break;
+    default:
+      break;
+    }
+  }
 }
 #endif /* USE_TFT */

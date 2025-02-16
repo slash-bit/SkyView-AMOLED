@@ -28,6 +28,7 @@
 
 #include "SoCHelper.h"
 #include "EPDHelper.h"
+#include "TFTHelper.h"
 #include "EEPROMHelper.h"
 #include "WiFiHelper.h"
 #include "BluetoothHelper.h"
@@ -1031,7 +1032,7 @@ AceButton button_down(SOC_BUTTON_DOWN_T5S);
 void handleEvent(AceButton* button, uint8_t eventType,
     uint8_t buttonState) {
 
-#if 0
+// #if 0
   // Print out a message for all events.
   if        (button == &button_mode) {
     Serial.print(F("MODE "));
@@ -1045,7 +1046,7 @@ void handleEvent(AceButton* button, uint8_t eventType,
   Serial.print(eventType);
   Serial.print(F("; buttonState: "));
   Serial.println(buttonState);
-#endif
+// #endif
 
   switch (eventType) {
     case AceButton::kEventPressed:
@@ -1054,14 +1055,20 @@ void handleEvent(AceButton* button, uint8_t eventType,
       if (button == &button_mode) {
 #if defined(USE_EPAPER)
         EPD_Mode();
+#elif defined(USE_TFT)
+        TFT_Mode();
 #endif /* USE_EPAPER */
       } else if (button == &button_up) {
 #if defined(USE_EPAPER)
         EPD_Up();
+#elif defined(USE_TFT)
+        TFT_Up();
 #endif /* USE_EPAPER */
       } else if (button == &button_down) {
 #if defined(USE_EPAPER)
         EPD_Down();
+#elif defined(USE_TFT)
+        TFT_Down();
 #endif /* USE_EPAPER */
       }
       break;
@@ -1092,8 +1099,8 @@ static void ESP32_Button_setup()
   int mode_button_pin = settings->adapter == ADAPTER_TTGO_T5S ?
                         SOC_BUTTON_MODE_T5S : SOC_BUTTON_MODE_DEF;
 
-  // Button(s) uses external pull up resistor.
-  pinMode(mode_button_pin, INPUT);
+  // Button(s) uses internal pull up resistor.
+  pinMode(mode_button_pin, INPUT_PULLUP);
 
   button_mode.init(mode_button_pin);
 
@@ -1112,9 +1119,9 @@ static void ESP32_Button_setup()
 
   if (settings->adapter == ADAPTER_TTGO_T5S) {
 
-    // Button(s) uses external pull up resistor.
-    pinMode(SOC_BUTTON_UP_T5S,   INPUT);
-    pinMode(SOC_BUTTON_DOWN_T5S, INPUT);
+    // Button(s) uses internal pull up resistor.
+    pinMode(SOC_BUTTON_UP_T5S,   INPUT_PULLUP);
+    pinMode(SOC_BUTTON_DOWN_T5S, INPUT_PULLUP);
 
     ButtonConfig* UpButtonConfig = button_up.getButtonConfig();
     UpButtonConfig->setEventHandler(handleEvent);

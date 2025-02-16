@@ -15,7 +15,6 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 // this version follows
 //   https://github.com/nbonniere/SoftRF/tree/master/software/firmware/source/SkyView
 #if defined(USE_TFT)
@@ -42,6 +41,7 @@
 #include <Adafruit_GFX.h> // Include the Adafruit_GFX library
 #include <Adafruit_ST7789.h> // Include the Adafruit ST7789 library
 
+extern Adafruit_ST7789 tft;
 
 static navbox_t navbox1;
 static navbox_t navbox2;
@@ -50,7 +50,7 @@ static navbox_t navbox4;
 
 static int EPD_zoom = ZOOM_MEDIUM;
 
-#define ICON_AIRPLANE
+// #define ICON_AIRPLANE
 
 #if defined(ICON_AIRPLANE)
 //#define ICON_AIRPLANE_POINTS 6
@@ -86,36 +86,43 @@ static void EPD_Draw_NavBoxes()
   uint16_t top_navboxes_h = maxof2(navbox1.height, navbox2.height);
 
   {
-    tft.fillRect(top_navboxes_x, top_navboxes_y,
-                      top_navboxes_w, top_navboxes_h,
-                      TFT_WHITE);
+    //draw round boxes for navboxes #72A0C1 Air Superiority Blue
+    tft.fillRoundRect(top_navboxes_x, top_navboxes_y,
+                      top_navboxes_w, top_navboxes_h, 2,
+                      NAVBOX_COLOR);
 
     tft.drawRoundRect( navbox1.x + 1, navbox1.y + 1,
                             navbox1.width - 2, navbox1.height - 2,
-                            4, TFT_BLACK);
+                            4, NAVBOX_FRAME_COLOR2);
 
     tft.drawRoundRect( navbox2.x + 1, navbox2.y + 1,
                             navbox2.width - 2, navbox2.height - 2,
-                            4, TFT_BLACK);
+                            4, NAVBOX_FRAME_COLOR2);
 
-    tft.setFreeFont(&Picopixel);
+    // draw title text in the navboxes, colour - #FF9933 - Deep Saffron
+    tft.setTextColor(NAVBOX_TEXT_COLOR);
+    tft.setTextSize(1);
 
-    tft.getTextBounds(navbox1.title, 0, 0, &tbx, &tby, &tbw, &tbh);
-    tft.setCursor(navbox1.x + 5, navbox1.y + 5 + tbh);
+    // tft.getTextBounds(navbox1.title, 0, 0, &tbx, &tby, &tbw, &tbh);
+    tft.setCursor(navbox1.x + 6, navbox1.y + 6);
     tft.print(navbox1.title);
 
-    tft.getTextBounds(navbox2.title, 0, 0, &tbx, &tby, &tbw, &tbh);
-    tft.setCursor(navbox2.x + 5, navbox2.y + 5 + tbh);
+    // tft.getTextBounds(navbox2.title, 0, 0, &tbx, &tby, &tbw, &tbh);
+    tft.setCursor(navbox2.x + 6, navbox2.y + 6);
     tft.print(navbox2.title);
 
-    tft.setFreeFont(&FreeMonoBold18pt7b);
+    // Draw information text Deep Saffron
+    tft.setTextColor(NAVBOX_TEXT_COLOR);
+    tft.setTextSize(3);
 
-    tft.setCursor(navbox1.x + 40, navbox1.y + 32);
+    tft.setCursor(navbox1.x + 70, navbox1.y + 10);
     tft.print(navbox1.value);
 
-    tft.setFreeFont(&FreeSerifBold12pt7b);
+    // Same for box 2
+    tft.setTextColor(NAVBOX_TEXT_COLOR);
+    tft.setTextSize(2);
 
-    tft.setCursor(navbox2.x + 8, navbox2.y + 30);
+    tft.setCursor(navbox2.x + 44, navbox2.y + 12);
     tft.print(navbox2.value == PROTOCOL_NMEA  ? "NMEA" :
                    navbox2.value == PROTOCOL_GDL90 ? " GDL" : " UNK" );
   }
@@ -126,51 +133,60 @@ static void EPD_Draw_NavBoxes()
   uint16_t bottom_navboxes_h = maxof2(navbox3.height, navbox4.height);
 
   {
-    tft.fillRect(bottom_navboxes_x, bottom_navboxes_y,
-                      bottom_navboxes_w, bottom_navboxes_h,
-                      TFT_WHITE);
+    tft.fillRoundRect(bottom_navboxes_x, bottom_navboxes_y,
+                      bottom_navboxes_w, bottom_navboxes_h, 2,
+                      NAVBOX_COLOR);
 
     tft.drawRoundRect( navbox3.x + 1, navbox3.y + 1,
                             navbox3.width - 2, navbox3.height - 2,
-                            4, TFT_BLACK);
+                            4, NAVBOX_FRAME_COLOR2);
     tft.drawRoundRect( navbox4.x + 1, navbox4.y + 1,
                             navbox4.width - 2, navbox4.height - 2,
-                            4, TFT_BLACK);
+                            4, NAVBOX_FRAME_COLOR2);
 
-    tft.setFreeFont(&Picopixel);
+    // Title text color orange
+    tft.setTextColor(NAVBOX_TEXT_COLOR);
+    tft.setTextSize(1);
 
-    tft.getTextBounds(navbox3.title, 0, 0, &tbx, &tby, &tbw, &tbh);
-    tft.setCursor(navbox3.x + 5, navbox3.y + 5 + tbh);
+    // tft.getTextBounds(navbox3.title, 0, 0, &tbx, &tby, &tbw, &tbh);
+    tft.setCursor(navbox3.x + 6, navbox3.y + 6);
     tft.print(navbox3.title);
 
-    tft.getTextBounds(navbox4.title, 0, 0, &tbx, &tby, &tbw, &tbh);
-    tft.setCursor(navbox4.x + 5, navbox4.y + 5 + tbh);
+    // tft.getTextBounds(navbox4.title, 0, 0, &tbx, &tby, &tbw, &tbh);
+    tft.setCursor(navbox4.x + 6, navbox4.y + 6);
     tft.print(navbox4.title);
 
-    tft.setFreeFont(&FreeSerifBold12pt7b);
+    // Info text
+    tft.setTextColor(NAVBOX_TEXT_COLOR);
+    tft.setTextSize(3);
 
-    tft.setCursor(navbox3.x + 10, navbox3.y + 30);
+    tft.setCursor(navbox3.x + 50, navbox3.y + 10);
+    Serial.print(navbox3.x);
+    Serial.print(navbox3.y);
+    Serial.println(navbox3.value);
 
     if (settings->units == UNITS_METRIC || settings->units == UNITS_MIXED) {
-      tft.print(navbox3.value == ZOOM_LOWEST ? "10 KM" :
-                     navbox3.value == ZOOM_LOW    ? " 5 KM" :
-                     navbox3.value == ZOOM_MEDIUM ? " 2 KM" :
-                     navbox3.value == ZOOM_HIGH   ? " 1 KM" : "");
+      tft.print(navbox3.value == ZOOM_LOWEST ? "10km" :
+                     navbox3.value == ZOOM_LOW    ? " 5km" :
+                     navbox3.value == ZOOM_MEDIUM ? " 2km" :
+                     navbox3.value == ZOOM_HIGH   ? " 1km" : "");
     } else {
-      tft.print(navbox3.value == ZOOM_LOWEST ? " 5 NM" :
-                     navbox3.value == ZOOM_LOW    ? "2.5NM" :
-                     navbox3.value == ZOOM_MEDIUM ? " 1 NM" :
-                     navbox3.value == ZOOM_HIGH   ? "0.5NM" : "");
+      tft.print(navbox3.value == ZOOM_LOWEST ? " 5nm" :
+                     navbox3.value == ZOOM_LOW    ? "2.5nm" :
+                     navbox3.value == ZOOM_MEDIUM ? " 1nm" :
+                     navbox3.value == ZOOM_HIGH   ? "0.5nm" : "");
     }
 
-    tft.setFreeFont(&FreeMonoBold18pt7b);
+    // Set color for battery text ( TBD chnage according to charge level)
+    tft.setTextColor(NAVBOX_TEXT_COLOR);
+    tft.setTextSize(3);
 
-    tft.setCursor(navbox4.x + 15, navbox4.y + 32);
-    tft.print((float) navbox4.value / 10);
+    tft.setCursor(navbox4.x + 40, navbox4.y + 10);
+    tft.print((float) navbox4.value);
   }
 }
 
-void EPD_radar_Draw_Message(const char *msg1, const char *msg2)
+void TFT_radar_Draw_Message(const char *msg1, const char *msg2)
 {
   int16_t  tbx, tby;
   uint16_t tbw, tbh;
@@ -178,34 +194,34 @@ void EPD_radar_Draw_Message(const char *msg1, const char *msg2)
 
   if (msg1 != NULL && strlen(msg1) != 0) {
     uint16_t radar_x = 0;
-    uint16_t radar_y = (display->height() - display->width()) / 2;
-    uint16_t radar_w = display->width();
+    uint16_t radar_y = (320 - 240) / 2;
+    uint16_t radar_w = 240;
+    tft.setTextColor(ST77XX_RED);
+    // tft.setFreeFont(&FreeMonoBold18pt7b);
 
-    tft.setFreeFont(&FreeMonoBold18pt7b);
 
-    {
-      tft.fillRect(radar_x, radar_y, radar_w, radar_w, TFT_WHITE);
+    tft.fillRect(radar_x, radar_y, radar_w, radar_w, ST77XX_BLACK);
 
-      if (msg2 == NULL) {
-        tft.getTextBounds(msg1, 0, 0, &tbx, &tby, &tbw, &tbh);
-        x = (radar_w - tbw) / 2;
-        y = radar_y + (radar_w + tbh) / 2;
-        tft.setCursor(x, y);
-        tft.print(msg1);
-      } else {
-        tft.getTextBounds(msg1, 0, 0, &tbx, &tby, &tbw, &tbh);
-        x = (radar_w - tbw) / 2;
-        y = radar_y + radar_w / 2 - tbh;
-        tft.setCursor(x, y);
-        tft.print(msg1);
+    if (msg2 == NULL) {
+      tft.getTextBounds(msg1, 0, 0, &tbx, &tby, &tbw, &tbh);
+      x = (radar_w - tbw) / 2;
+      y = radar_y + (radar_w + tbh) / 2;
+      tft.setCursor(x, y);
+      tft.print(msg1);
+    } else {
+      tft.getTextBounds(msg1, 0, 0, &tbx, &tby, &tbw, &tbh);
+      x = (radar_w - tbw) / 2;
+      y = radar_y + radar_w / 2 - tbh;
+      tft.setCursor(x, y);
+      tft.print(msg1);
 
-        tft.getTextBounds(msg2, 0, 0, &tbx, &tby, &tbw, &tbh);
-        x = (radar_w - tbw) / 2;
-        y = radar_y + radar_w / 2 + tbh;
-        tft.setCursor(x, y);
-        tft.print(msg2);
+      tft.getTextBounds(msg2, 0, 0, &tbx, &tby, &tbw, &tbh);
+      x = (radar_w - tbw) / 2;
+      y = radar_y + radar_w / 2 + tbh;
+      tft.setCursor(x, y);
+      tft.print(msg2);
       }
-    }
+    
   }
 }
 
@@ -221,14 +237,16 @@ static void EPD_Draw_Radar()
   /* divider is distance range */
   int32_t divider = 2000; // default 2000m 
 
-  tft.setFreeFont(&FreeMono9pt7b);
+  // draw radar
+  tft.setTextColor(ST77XX_GREEN);
+  tft.setTextSize(2);
   tft.getTextBounds("N", 0, 0, &tbx, &tby, &tbw, &tbh);
 
   uint16_t radar_x = 0;
   uint16_t radar_y = (tft.height() - tft.width()) / 2;
   uint16_t radar_w = tft.width();
-
-  tft.fillRect(radar_x, radar_y, radar_w, radar_w, TFT_WHITE);
+  // Colour codes can be obtained from https://www.webfx.com/web-design/color-picker/color-chart/ values have to be converted to 565 hex format. Example #536878 > 0x534F
+  tft.fillRect(radar_x, radar_y, radar_w, radar_w, ST77XX_BLACK);
 
   uint16_t radar_center_x = radar_w / 2;
   uint16_t radar_center_y = radar_y + radar_w / 2;
@@ -282,11 +300,16 @@ static void EPD_Draw_Radar()
         float rel_y;
         float tgtSin;
         float tgtCos;
+        float climb;
+        int Acfttype;
+        int color;
 
         bool isTeam = (Container[i].ID == settings->team);
 
         rel_x = Container[i].RelativeEast;
         rel_y = Container[i].RelativeNorth;
+        climb = Container[i].ClimbRate;
+        Acfttype = Container[i].AcftType;
         tgtSin = sin_approx(Container[i].Track);
         tgtCos = cos_approx(Container[i].Track);
 
@@ -304,6 +327,9 @@ static void EPD_Draw_Radar()
 
         Serial.print(F(" RelativeNorth=")); Serial.println(Container[i].RelativeNorth);
         Serial.print(F(" RelativeEast="));  Serial.println(Container[i].RelativeEast);
+        Serial.print(F(" ClimbRate="));  Serial.println(Container[i].ClimbRate);
+        Serial.print(F(" AcftType="));  Serial.println(Container[i].AcftType);
+
 #endif
         switch (settings->orientation) {
           case DIRECTION_NORTH_UP:
@@ -348,18 +374,85 @@ static void EPD_Draw_Radar()
         int16_t y = constrain((rel_y * radius) / divider, -32768, 32767);
 
         scale = Container[i].alarm_level + 1;
-
+        //color based on ClimbRate
+        if (Container[i].RelativeVertical >  EPD_RADAR_V_THRESHOLD) {
+          color = ST77XX_GREEN;
+        } else if (Container[i].RelativeVertical < -EPD_RADAR_V_THRESHOLD) {
+          color = ST77XX_BLUE;
+        } else {
+          color = ST77XX_ORANGE;
+        }
         switch (Container[i].alarm_level)
         {
         case 0:
-        // draw target as triangle
-        tft.fillTriangle(radar_center_x + x + (int)epd_Points[0][0],
-                            radar_center_y - y + (int)epd_Points[0][1],
-                            radar_center_x + x + (int)epd_Points[1][0],
-                            radar_center_y - y + (int)epd_Points[1][1],
-                            radar_center_x + x + (int)epd_Points[2][0],
-                            radar_center_y - y + (int)epd_Points[2][1],
-                            TFT_BLACK);
+          switch (Acfttype)
+          {
+          case 7: //Paraglider -  draw target as triangle
+          // based on climb/sink rate point triangle up or down
+            if (climb >= 0) {
+              tft.fillTriangle(radar_center_x + x + (int)epd_Points[0][0],
+                                radar_center_y - y + (int)epd_Points[0][1],
+                                radar_center_x + x + (int)epd_Points[1][0],
+                                radar_center_y - y + (int)epd_Points[1][1],
+                                radar_center_x + x + (int)epd_Points[4][0],
+                                radar_center_y - y + (int)epd_Points[4][1],
+                                color);
+            } else {
+              tft.fillTriangle(radar_center_x + x + (int)epd_Points[2][0],
+                                radar_center_y - y + (int)epd_Points[2][1],
+                                radar_center_x + x + (int)epd_Points[1][0],
+                                radar_center_y - y + (int)epd_Points[1][1],
+                                radar_center_x + x + (int)epd_Points[4][0],
+                                radar_center_y - y + (int)epd_Points[4][1],
+                                color);
+            }
+            //draw circle around it, if it is team
+            if (isTeam) {
+              tft.drawCircle(radar_center_x + x,
+                              radar_center_y - y,
+                              12, ST77XX_WHITE);
+              if (Container[i].RelativeVertical >  EPD_RADAR_V_THRESHOLD) {
+                // draw a '+' next to target triangle if buddy's relative height is more than 500ft
+                tft.drawLine(radar_center_x + x - 2 + (int) epd_Points[3][0],
+                            radar_center_y - y     + (int) epd_Points[3][1],
+                            radar_center_x + x + 2 + (int) epd_Points[3][0],
+                            radar_center_y - y     + (int) epd_Points[3][1],
+                            ST77XX_WHITE);
+                tft.drawLine(radar_center_x + x     + (int) epd_Points[3][0],
+                            radar_center_y - y + 2 + (int) epd_Points[3][1],
+                            radar_center_x + x     + (int) epd_Points[3][0],
+                            radar_center_y - y - 2 + (int) epd_Points[3][1],
+                            ST77XX_WHITE);
+              } else if (Container[i].RelativeVertical < -EPD_RADAR_V_THRESHOLD) {
+                // draw a '-' next to target triangle
+                tft.drawLine(radar_center_x + x - 2 + (int) epd_Points[3][0],
+                            radar_center_y - y     + (int) epd_Points[3][1],
+                            radar_center_x + x + 2 + (int) epd_Points[3][0],
+                            radar_center_y - y     + (int) epd_Points[3][1],
+                            ST77XX_WHITE);
+              } else {
+                    // TBD
+                }
+                    }
+            // tft.fillTriangle(radar_center_x + x + (int)epd_Points[0][0],
+            //                     radar_center_y - y + (int)epd_Points[0][1],
+            //                     radar_center_x + x + (int)epd_Points[1][0],
+            //                     radar_center_y - y + (int)epd_Points[1][1],
+            //                     radar_center_x + x + (int)epd_Points[2][0],
+            //                     radar_center_y - y + (int)epd_Points[2][1],
+            //                     color);
+            break;
+          default: //Glider, Hanglider, ULM, Balloon
+            // Draw GA aircraft on radar
+            tft.fillCircle(radar_center_x + x,
+                            radar_center_y - y,
+                            10, ST77XX_RED);
+            tft.fillRect(radar_center_x + x - 9, radar_center_y - y - 1, 18, 3, ST77XX_BLACK);
+            tft.fillCircle(radar_center_x + x,
+                            radar_center_y - y + 2,
+                            3, ST77XX_BLACK);
+            break;
+          }
             break;
         case 1:
         //break;
@@ -372,53 +465,57 @@ static void EPD_Draw_Radar()
                                 radar_center_y - y + scale * ((int)epd_Points[1][1]),
                                 radar_center_x + x + scale * ((int)epd_Points[4][0]),
                                 radar_center_y - y + scale * ((int)epd_Points[4][1]),
-                                TFT_BLACK);
+                                color);
             tft.fillTriangle(radar_center_x + x + scale * ((int)epd_Points[2][0]),
                                 radar_center_y - y + scale * ((int)epd_Points[2][1]),
                                 radar_center_x + x + scale * ((int)epd_Points[1][0]),
                                 radar_center_y - y + scale * ((int)epd_Points[1][1]),
                                 radar_center_x + x + scale * ((int)epd_Points[4][0]),
                                 radar_center_y - y + scale * ((int)epd_Points[4][1]),
-                                TFT_BLACK);
+                                color);
             break;
         default:
             break;
         }
 
-        if (Container[i].RelativeVertical >  EPD_RADAR_V_THRESHOLD) {
-        // draw a '+' next to target triangle
-        tft.drawLine(radar_center_x + x - 2 + (int) epd_Points[3][0],
-                    radar_center_y - y     + (int) epd_Points[3][1],
-                    radar_center_x + x + 2 + (int) epd_Points[3][0],
-                    radar_center_y - y     + (int) epd_Points[3][1],
-                    TFT_BLACK);
-        tft.drawLine(radar_center_x + x     + (int) epd_Points[3][0],
-                    radar_center_y - y + 2 + (int) epd_Points[3][1],
-                    radar_center_x + x     + (int) epd_Points[3][0],
-                    radar_center_y - y - 2 + (int) epd_Points[3][1],
-                    TFT_BLACK);
-        } else if (Container[i].RelativeVertical < -EPD_RADAR_V_THRESHOLD) {
-        // draw a '-' next to target triangle
-        tft.drawLine(radar_center_x + x - 2 + (int) epd_Points[3][0],
-                    radar_center_y - y     + (int) epd_Points[3][1],
-                    radar_center_x + x + 2 + (int) epd_Points[3][0],
-                    radar_center_y - y     + (int) epd_Points[3][1],
-                    TFT_BLACK);
-        } else {
-            // TBD
-        }
+
         // if Team match, draw a circle around target
         if (isTeam) {
             tft.drawCircle(radar_center_x + x,
                             radar_center_y - y,
-                            7, TFT_BLACK);
+                            7, ST77XX_WHITE);
         }
       }
     }
 
     // draw range circles
-    tft.drawCircle(radar_center_x, radar_center_y, radius,   TFT_BLACK);
-    tft.drawCircle(radar_center_x, radar_center_y, radius / 2, TFT_BLACK);
+    tft.drawCircle(radar_center_x, radar_center_y, radius - 1,   RADAR_CIRCLES_COLOR);
+    tft.drawCircle(radar_center_x, radar_center_y, (radius / 2) - 1, RADAR_CIRCLES_COLOR);
+
+        //draw distance marker as numbers on radar circles diaganolly from center to bottom right
+    uint16_t circle_mark1_x = radar_center_x + abs(radius/2 * 0.7);
+    uint16_t circle_mark1_y = radar_center_y + abs(radius/2 * 0.7);
+
+    uint16_t circle_mark2_x = radar_center_x + abs(radius * 0.7);
+    uint16_t circle_mark2_y = radar_center_y + abs(radius * 0.7);
+    uint16_t scale = (navbox3.value == ZOOM_LOWEST ? 10 :
+                     navbox3.value == ZOOM_LOW    ? 5 :
+                     navbox3.value == ZOOM_MEDIUM ? 2 :
+                     navbox3.value == ZOOM_HIGH   ? 1 : 1);
+    tft.setCursor(circle_mark1_x, circle_mark1_y);
+    //draw black rectangles as background
+    tft.fillRect(circle_mark1_x - 10, circle_mark1_y - 10, 20, 20, ST77XX_BLACK);
+    tft.setTextSize(2);
+    // divide scale by 2 , if resul hs a decimal point, print only point and the decimal
+    if (scale < 2) {
+      tft.print(".5");
+    } else {
+      tft.print(scale / 2);
+    }
+    tft.print(scale / 2);
+    tft.setCursor(circle_mark2_x, circle_mark2_y);
+    tft.fillRect(circle_mark2_x - 10, circle_mark2_y - 10, 20, 20, ST77XX_BLACK);
+    tft.print(scale);
 
 #if defined(ICON_AIRPLANE)
     /* draw little airplane */
@@ -444,32 +541,32 @@ static void EPD_Draw_Radar()
                 radar_center_y + (int) epd_Points[0][1],
                 radar_center_x + (int) epd_Points[1][0],
                 radar_center_y + (int) epd_Points[1][1],
-                TFT_BLACK);
+                ST77XX_WHITE);
     tft.drawLine(radar_center_x + (int) epd_Points[2][0],
                 radar_center_y + (int) epd_Points[2][1],
                 radar_center_x + (int) epd_Points[3][0],
                 radar_center_y + (int) epd_Points[3][1],
-                TFT_BLACK);
+                ST77XX_WHITE);
     tft.drawLine(radar_center_x + (int) epd_Points[4][0],
                 radar_center_y + (int) epd_Points[4][1],
                 radar_center_x + (int) epd_Points[5][0],
                 radar_center_y + (int) epd_Points[5][1],
-                TFT_BLACK);
+                ST77XX_WHITE);
     tft.drawLine(radar_center_x + (int) epd_Points[6][0],
                 radar_center_y + (int) epd_Points[6][1],
                 radar_center_x + (int) epd_Points[7][0],
                 radar_center_y + (int) epd_Points[7][1],
-                TFT_BLACK);
+                ST77XX_WHITE);
     tft.drawLine(radar_center_x + (int) epd_Points[8][0],
                 radar_center_y + (int) epd_Points[8][1],
                 radar_center_x + (int) epd_Points[9][0],
                 radar_center_y + (int) epd_Points[9][1],
-                TFT_BLACK);
+                ST77XX_WHITE);
     tft.drawLine(radar_center_x + (int) epd_Points[10][0],
                 radar_center_y + (int) epd_Points[10][1],
                 radar_center_x + (int) epd_Points[11][0],
                 radar_center_y + (int) epd_Points[11][1],
-                TFT_BLACK);
+                ST77XX_WHITE);
 #else  //ICON_AIRPLANE
     /* draw arrow tip */
     for (int i=0; i < ICON_ARROW_POINTS; i++) {
@@ -494,22 +591,22 @@ static void EPD_Draw_Radar()
                 radar_center_y + (int) epd_Points[0][1],
                 radar_center_x + (int) epd_Points[1][0],
                 radar_center_y + (int) epd_Points[1][1],
-                TFT_BLACK);
+                ST77XX_WHITE);
     tft.drawLine(radar_center_x + (int) epd_Points[1][0],
                 radar_center_y + (int) epd_Points[1][1],
                 radar_center_x + (int) epd_Points[2][0],
                 radar_center_y + (int) epd_Points[2][1],
-                TFT_BLACK);
+                ST77XX_WHITE);
     tft.drawLine(radar_center_x + (int) epd_Points[2][0],
                 radar_center_y + (int) epd_Points[2][1],
                 radar_center_x + (int) epd_Points[3][0],
                 radar_center_y + (int) epd_Points[3][1],
-                TFT_BLACK);
+                ST77XX_WHITE);
     tft.drawLine(radar_center_x + (int) epd_Points[3][0],
                 radar_center_y + (int) epd_Points[3][1],
                 radar_center_x + (int) epd_Points[0][0],
                 radar_center_y + (int) epd_Points[0][1],
-                TFT_BLACK);
+                ST77XX_WHITE);
 #endif //ICON_AIRPLANE
 
     switch (settings->orientation)
@@ -537,26 +634,28 @@ static void EPD_Draw_Radar()
         // draw L, R, B
         x = radar_x + radar_w / 2 - radius + tbw / 2;
         y = radar_y + (radar_w + tbh) / 2;
+        tft.setTextSize(1);
         tft.setCursor(x, y);
         tft.print("L");
         x = radar_x + radar_w / 2 + radius - (3 * tbw) / 2;
         y = radar_y + (radar_w + tbh) / 2;
         tft.setCursor(x, y);
         tft.print("R");
-        x = radar_x + (radar_w - tbw) / 2;
-        y = radar_y + radar_w / 2 + radius - tbh / 2;
-        tft.setCursor(x, y);
-        tft.print("B");
+        // x = radar_x + (radar_w - tbw) / 2;
+        // y = radar_y + radar_w / 2 + radius - tbh / 2;
+        // tft.setCursor(x, y);
+        // tft.print("B");
 
         // draw aircraft heading
-        tft.setFreeFont(&FreeMonoBold9pt7b);
+        tft.setTextColor(NAVBOX_TEXT_COLOR);
+        tft.setTextSize(2);
         snprintf(cog_text, sizeof(cog_text), "%03d", ThisAircraft.Track);
         tft.getTextBounds(cog_text, 0, 0, &tbx, &tby, &tbw, &tbh);
-        x = radar_x + (radar_w - tbw) / 2;
-        y = radar_y + radar_w / 2 - radius + (3 * tbh) / 2;
+        x = radar_x + (radar_w - tbw) / 2 - 5;
+        y = radar_y + radar_w / 2 - radius + (3 * tbh) / 2 - 12;
         tft.setCursor(x, y);
         tft.print(cog_text);
-        tft.drawRoundRect(x - 2, y - tbh - 2, tbw + 8, tbh + 6, 4, TFT_BLACK);
+        tft.drawRoundRect(x - 2, y - tbh - 2, tbw + 8, tbh + 6, 4, NAVBOX_FRAME_COLOR2);
         break;
     default:
   /* TBD */
@@ -567,7 +666,7 @@ static void EPD_Draw_Radar()
 
 
 
-void EPD_radar_setup()
+void TFT_radar_setup()
 {
   EPD_zoom = settings->zoom;
 
@@ -575,19 +674,18 @@ void EPD_radar_setup()
   uint16_t radar_y = 0;
   uint16_t radar_w = 0;
 
-  if (display) {
-    radar_y = (display->height() - display->width()) / 2;
-    radar_w = display->width();
-  }
+  radar_y = (320 - 240) / 2;
+  radar_w = 240;
+
 
   memcpy(navbox1.title, NAVBOX1_TITLE, strlen(NAVBOX1_TITLE));
   navbox1.x = 0;
   navbox1.y = 0;
 
-  if (display) {
-    navbox1.width  = display->width() / 2;
-    navbox1.height = (display->height() - display->width()) / 2;
-  }
+
+  navbox1.width  = 240 / 2;
+  navbox1.height = (320 - 240) / 2;
+  
 
   navbox1.value      = 0;
   navbox1.timestamp  = millis();
@@ -617,9 +715,9 @@ void EPD_radar_setup()
   navbox4.timestamp  = millis();
 }
 
-void EPD_radar_loop()
+void TFT_radar_loop()
 {
-  if (isTimeToDisplay() && SoC->EPD_is_ready()) {
+  if (isTimeToDisplay()) {
 
     bool hasData = settings->protocol == PROTOCOL_NMEA  ? NMEA_isConnected()  :
                    settings->protocol == PROTOCOL_GDL90 ? GDL90_isConnected() :
@@ -634,10 +732,10 @@ void EPD_radar_loop()
       if (hasFix) {
         EPD_Draw_Radar();
       } else {
-        EPD_radar_Draw_Message(NO_FIX_TEXT, NULL);
+        TFT_radar_Draw_Message(NO_FIX_TEXT, NULL);
       }
     } else {
-      EPD_radar_Draw_Message(NO_DATA_TEXT, NULL);
+      TFT_radar_Draw_Message(NO_DATA_TEXT, NULL);
     }
 
     navbox1.value = Traffic_Count();
@@ -660,18 +758,16 @@ void EPD_radar_loop()
 
     EPD_Draw_NavBoxes();
 
-    SoC->EPD_update(EPD_UPDATE_FAST);
-
     EPDTimeMarker = millis();
   }
 }
 
-void EPD_radar_zoom()
+void TFT_radar_zoom()
 {
   if (EPD_zoom < ZOOM_HIGH) EPD_zoom++;
 }
 
-void EPD_radar_unzoom()
+void TFT_radar_unzoom()
 {
   if (EPD_zoom > ZOOM_LOWEST) EPD_zoom--;
 }
