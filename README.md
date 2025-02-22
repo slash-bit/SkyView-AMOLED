@@ -9,6 +9,6 @@ Wi-Fi UDP connection ;
 Bluetooth SPP ;
 Bluetooth LE
 
-This repository is based on fork from Mosche Braner's version of SkyView and it sports some nice additions on top of original SkyView.
+This is forked repository of SkyView.
 My version is ported to PlatformIO - the tool of choice for building and compiling for various devices and screens.
-The firmware currently supports e-Paper screens, but will be also expanded to bright IPS based TFT colour screens .
+This version extensds support for AMOLED colour displays.
