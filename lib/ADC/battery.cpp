@@ -11,9 +11,14 @@ static const char TAG[] = "main";
 esp_adc_cal_characteristics_t *adc_characs =
     (esp_adc_cal_characteristics_t *)calloc(
         1, sizeof(esp_adc_cal_characteristics_t));
-
+        
+#if defined(ESP32S3)
+static adc1_channel_t adc_channel = ADC1_GPIO5_CHANNEL;
+static const adc_atten_t atten = ADC_ATTEN_DB_12;
+#else
 static adc1_channel_t adc_channel = ADC1_GPIO36_CHANNEL;
 static const adc_atten_t atten = ADC_ATTEN_DB_11;
+#endif
 static const adc_unit_t unit = ADC_UNIT_1;
 
 void calibrate_voltage(adc1_channel_t channel) {

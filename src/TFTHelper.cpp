@@ -22,6 +22,8 @@ static unsigned long EPD_anti_ghosting_timer = 0;
 
 volatile int EPD_task_command = EPD_UPDATE_NONE;
 
+// canvas for fast re-draw
+GFXcanvas16 canvas_radar(240, 240); 
 
 // TFT_eSPI tft = TFT_eSPI();
 Adafruit_ST7789 tft = Adafruit_ST7789(SOC_GPIO_PIN_SS_TFT, SOC_GPIO_PIN_DC_TFT, SOC_GPIO_PIN_MOSI_TFT, SOC_GPIO_PIN_SCK_TFT, -1);
@@ -49,7 +51,12 @@ void TFT_setup(void) {
   TFT_radar_setup();
 }
 void TFT_loop(void) {
-   TFT_radar_loop();
+  UBaseType_t stackHighWaterMark = uxTaskGetStackHighWaterMark(NULL);
+  Serial.print("TFT Task Stack High Water Mark: ");
+  Serial.println(stackHighWaterMark);
+  TFT_radar_loop();
+  yield();  // Ensure the watchdog gets reset
+  delay(200);
 }
 
 void TFT_Mode()

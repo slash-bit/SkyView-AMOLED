@@ -179,8 +179,11 @@ static void ESP32_fini()
    *  SD card in  -            0.2 mA
    *  SD card out -            0.1 mA
    */
+#if defined(ESP32S3)
+esp_sleep_enable_ext1_wakeup(1ULL << mode_button_pin, ESP_EXT1_WAKEUP_ANY_LOW);
+#else
   esp_sleep_enable_ext1_wakeup(1ULL << mode_button_pin, ESP_EXT1_WAKEUP_ALL_LOW);
-
+#endif
 //  Serial.println("Going to sleep now");
 //  Serial.flush();
 
@@ -340,8 +343,13 @@ static void ESP32_WiFiUDP_stopAll()
 
 static void ESP32_Battery_setup()
 {
+#if defined(ESP32S3)
+  calibrate_voltage(ADC1_GPIO5_CHANNEL);
+#else
+  
   calibrate_voltage(settings->adapter == ADAPTER_TTGO_T5S ?
                     ADC1_GPIO35_CHANNEL : ADC1_GPIO36_CHANNEL);
+#endif
 }
 
 static float ESP32_Battery_voltage()
