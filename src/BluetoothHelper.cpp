@@ -102,100 +102,100 @@ class AppAdvertisedDeviceCallbacks: public BLEAdvertisedDeviceCallbacks {
   }
 };
 
-static void ESP32_BT_SPP_Connection_Manager(void *parameter)
-{
-  int command;
-  int status;
+// static void ESP32_BT_SPP_Connection_Manager(void *parameter)
+// {
+//   int command;
+//   int status;
 
-  while (true) {
+//   while (true) {
 
-    portENTER_CRITICAL(&ESP32_BT_ctl.mutex);
-    command = ESP32_BT_ctl.command;
-    portEXIT_CRITICAL(&ESP32_BT_ctl.mutex);
+//     portENTER_CRITICAL(&ESP32_BT_ctl.mutex);
+//     command = ESP32_BT_ctl.command;
+//     portEXIT_CRITICAL(&ESP32_BT_ctl.mutex);
 
-    switch (command)
-    {
-    case BT_CMD_CONNECT:
-        portENTER_CRITICAL(&ESP32_BT_ctl.mutex);
-        status = ESP32_BT_ctl.status;
-        portEXIT_CRITICAL(&ESP32_BT_ctl.mutex);
+//     switch (command)
+//     {
+//     case BT_CMD_CONNECT:
+//         portENTER_CRITICAL(&ESP32_BT_ctl.mutex);
+//         status = ESP32_BT_ctl.status;
+//         portEXIT_CRITICAL(&ESP32_BT_ctl.mutex);
 
-        if (status == BT_STATUS_CON) {
-          portENTER_CRITICAL(&ESP32_BT_ctl.mutex);
-          ESP32_BT_ctl.command = BT_CMD_NONE;
-          portEXIT_CRITICAL(&ESP32_BT_ctl.mutex);
-          break;
-        }
+//         if (status == BT_STATUS_CON) {
+//           portENTER_CRITICAL(&ESP32_BT_ctl.mutex);
+//           ESP32_BT_ctl.command = BT_CMD_NONE;
+//           portEXIT_CRITICAL(&ESP32_BT_ctl.mutex);
+//           break;
+//         }
 
-        // connect(address) is fast (upto 10 secs max), connect(name) is slow (upto 30 secs max) as it needs
-        // to resolve name to address first, but it allows to connect to different devices with the same name.
-        // Set CoreDebugLevel to Info to view devices bluetooth address and device names
+//         // connect(address) is fast (upto 10 secs max), connect(name) is slow (upto 30 secs max) as it needs
+//         // to resolve name to address first, but it allows to connect to different devices with the same name.
+//         // Set CoreDebugLevel to Info to view devices bluetooth address and device names
 
 
-        if (AppDevice != nullptr) {
-          pClient = BLEDevice::createClient();
-          pClient->setClientCallbacks(new AppClientCallback());
-          if (pClient->connect(AppDevice)) {
-            pRemoteCharacteristic = pClient->getService(serviceUUID)->getCharacteristic(charUUID);
-            if (pRemoteCharacteristic->canNotify()) {
-              pRemoteCharacteristic->registerForNotify(AppNotifyCallback);
-            }
-            portENTER_CRITICAL(&ESP32_BT_ctl.mutex);
-            ESP32_BT_ctl.status = BT_STATUS_CON;
-            ESP32_BT_ctl.command = BT_CMD_NONE;
-            portEXIT_CRITICAL(&ESP32_BT_ctl.mutex);
+//         if (AppDevice != nullptr) {
+//           pClient = BLEDevice::createClient();
+//           pClient->setClientCallbacks(new AppClientCallback());
+//           if (pClient->connect(AppDevice)) {
+//             pRemoteCharacteristic = pClient->getService(serviceUUID)->getCharacteristic(charUUID);
+//             if (pRemoteCharacteristic->canNotify()) {
+//               pRemoteCharacteristic->registerForNotify(AppNotifyCallback);
+//             }
+//             portENTER_CRITICAL(&ESP32_BT_ctl.mutex);
+//             ESP32_BT_ctl.status = BT_STATUS_CON;
+//             ESP32_BT_ctl.command = BT_CMD_NONE;
+//             portEXIT_CRITICAL(&ESP32_BT_ctl.mutex);
 
-            Serial.println(F("BLE: Connected to device."));
-          } else {
-          portENTER_CRITICAL(&ESP32_BT_ctl.mutex);
-          ESP32_BT_ctl.status = BT_STATUS_NC;
-          portEXIT_CRITICAL(&ESP32_BT_ctl.mutex);
+//             Serial.println(F("BLE: Connected to device."));
+//           } else {
+//           portENTER_CRITICAL(&ESP32_BT_ctl.mutex);
+//           ESP32_BT_ctl.status = BT_STATUS_NC;
+//           portEXIT_CRITICAL(&ESP32_BT_ctl.mutex);
 
-          Serial.print(F("BT SPP: Unable to connect to "));
-        }
-        Serial.println(settings->server);
-        break;
+//           Serial.print(F("BT SPP: Unable to connect to "));
+//         }
+//         Serial.println(settings->server);
+//         break;
 
-    case BT_CMD_DISCONNECT:
-        portENTER_CRITICAL(&ESP32_BT_ctl.mutex);
-        status = ESP32_BT_ctl.status;
-        portEXIT_CRITICAL(&ESP32_BT_ctl.mutex);
+//     case BT_CMD_DISCONNECT:
+//         portENTER_CRITICAL(&ESP32_BT_ctl.mutex);
+//         status = ESP32_BT_ctl.status;
+//         portEXIT_CRITICAL(&ESP32_BT_ctl.mutex);
 
-        if (status != BT_STATUS_CON) {
-          portENTER_CRITICAL(&ESP32_BT_ctl.mutex);
-          ESP32_BT_ctl.command = BT_CMD_NONE;
-          portEXIT_CRITICAL(&ESP32_BT_ctl.mutex);
-          break;
-        }
+//         if (status != BT_STATUS_CON) {
+//           portENTER_CRITICAL(&ESP32_BT_ctl.mutex);
+//           ESP32_BT_ctl.command = BT_CMD_NONE;
+//           portEXIT_CRITICAL(&ESP32_BT_ctl.mutex);
+//           break;
+//         }
 
-        // disconnect() may take upto 10 secs max
-        if (pClient && pClient->isConnected()) {
-          pClient->disconnect();
-          Serial.println(F("BLE: Disconnected from device."));
+//         // disconnect() may take upto 10 secs max
+//         if (pClient && pClient->isConnected()) {
+//           pClient->disconnect();
+//           Serial.println(F("BLE: Disconnected from device."));
 
-          portENTER_CRITICAL(&ESP32_BT_ctl.mutex);
-          ESP32_BT_ctl.status = BT_STATUS_NC;
-          ESP32_BT_ctl.command = BT_CMD_NONE;
-          portEXIT_CRITICAL(&ESP32_BT_ctl.mutex);
-        } else {
-          Serial.println(F("BLE: No device to disconnect."));
-        }
-        break;
+//           portENTER_CRITICAL(&ESP32_BT_ctl.mutex);
+//           ESP32_BT_ctl.status = BT_STATUS_NC;
+//           ESP32_BT_ctl.command = BT_CMD_NONE;
+//           portEXIT_CRITICAL(&ESP32_BT_ctl.mutex);
+//         } else {
+//           Serial.println(F("BLE: No device to disconnect."));
+//         }
+//         break;
 
-    case BT_CMD_SHUTDOWN:
-    if (pClient && pClient->isConnected()) {
-      pClient->disconnect();
-    }
-        vTaskDelete(NULL);
-        break;
-    default:
-        break;
-    }
+//     case BT_CMD_SHUTDOWN:
+//     if (pClient && pClient->isConnected()) {
+//       pClient->disconnect();
+//     }
+//         vTaskDelete(NULL);
+//         break;
+//     default:
+//         break;
+//     }
 
-    delay(1000);
-  }
-}
-}
+//     delay(1000);
+//   }
+// }
+// }
 
 static bool ESP32_BLEConnectToServer() {
   if (!pClient->connect(AppDevice)) {

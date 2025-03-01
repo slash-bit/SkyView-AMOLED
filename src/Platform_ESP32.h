@@ -34,18 +34,46 @@
 #define MAX_TRACKING_OBJECTS  9
 
 #define SerialInput           Serial1
+/*HARDWARE SPECIFIC*/
+#if defined(AMOLED)
+#include <pin_config.h>
 
+#endif /* AMOLED */
+// //AMOLED
+// #define LCD_SDIO0 11
+// #define LCD_SDIO1 13
+// #define LCD_SDIO2 14
+// #define LCD_SDIO3 15
+// #define LCD_SCLK 12
+// #define LCD_CS 10
+// #define LCD_RST 17
+// #define LCD_WIDTH 466
+// #define LCD_HEIGHT 466
+// #define LCD_EN 16
+
+// // IIC
+// #define IIC_SDA 7
+// #define IIC_SCL 6
+
+// // TOUCH
+// #define TP_INT 9
+
+// // Battery Voltage ADC
+// #define BATTERY_VOLTAGE_ADC_DATA 4
+
+// // SD
+// #define SD_CS 38
+// #define SD_MOSI 39
+// #define SD_MISO 40
+// #define SD_SCLK 41
+
+// // PCF8563
+// #define PCF8563_INT 9
+// #define SLEEP_WAKE_UP_INT GPIO_NUM_0
+// #endif /* H0175Y003AM */
 /* Peripherals */
-#define SOC_GPIO_PIN_GNSS_RX  1
-#define SOC_GPIO_PIN_GNSS_TX  3
-
-#define SOC_BUTTON_MODE_DEF   0
-
-/* TTGO T5 and T5S SPI pins mapping */
-#define SOC_GPIO_PIN_MOSI_T5S 23
-#define SOC_GPIO_PIN_MISO_T5S 12
-#define SOC_GPIO_PIN_SCK_T5S  18
-#define SOC_GPIO_PIN_SS_T5S   5
+#define SOC_GPIO_PIN_GNSS_RX  5
+#define SOC_GPIO_PIN_GNSS_TX  6
 
 #if defined(TFT_ST7789)
 /* ESP32 and ST7789 SPI pins mapping */
@@ -55,6 +83,16 @@
 #define SOC_GPIO_PIN_SCK_TFT    18
 #define SOC_GPIO_PIN_DC_TFT     16
 #endif /* TFT_ST7789 */
+#if 0
+#define SOC_BUTTON_MODE_DEF   0
+
+/* TTGO T5 and T5S SPI pins mapping */
+#define SOC_GPIO_PIN_MOSI_T5S 23
+#define SOC_GPIO_PIN_MISO_T5S 12
+#define SOC_GPIO_PIN_SCK_T5S  18
+#define SOC_GPIO_PIN_SS_T5S   5
+
+
 
 /* Waveshare ESP32 SPI pins mapping */
 #define SOC_GPIO_PIN_MOSI_WS  14
@@ -79,8 +117,8 @@
 #define SOC_BUTTON_DOWN_T5S   21
 
 /* TTGO T5S green LED mapping */
-#define SOC_GPIO_PIN_LED_T5S  2
-
+// #define SOC_GPIO_PIN_LED_T5S  2
+#endif
 /* Boya Microelectronics Inc. */
 #define BOYA_ID               0x68
 #define BOYA_BY25Q32AL        0x4016

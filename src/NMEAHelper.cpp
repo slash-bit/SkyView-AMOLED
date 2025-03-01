@@ -414,6 +414,7 @@ void NMEA_loop()
               settings->connection, settings->bridge, settings->filter);
       NMEA_Out(buf);
       heartbeat = millis();
+      yield();
   }
 #endif
 

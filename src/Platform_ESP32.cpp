@@ -118,7 +118,7 @@ static union {
   uint8_t efuse_mac[6];
   uint64_t chipmacid;
 };
-
+#if defined(SOUND)
 static uint8_t sdcard_files_to_open = 0;
 
 SPIClass uSD_SPI(HSPI);
@@ -147,6 +147,7 @@ i2s_pin_config_t pin_config = {
     .data_out_num = SOC_GPIO_PIN_DOUT,
     .data_in_num  = -1  // Not used
 };
+#endif /* SOUND*/
 
 // RTC_DATA_ATTR int bootCount = 0;
 
@@ -157,6 +158,7 @@ static uint32_t ESP32_getFlashId()
 
 static void ESP32_fini()
 {
+#if defined(BUTTON)
   int mode_button_pin = SOC_BUTTON_MODE_DEF;
 
   if (settings && (settings->adapter == ADAPTER_TTGO_T5S)) {
@@ -164,7 +166,7 @@ static void ESP32_fini()
 
     mode_button_pin = SOC_BUTTON_MODE_T5S;
   }
-
+#endif /* BUTTON */
   esp_wifi_stop();
   esp_bt_controller_disable();
   SPI.end();
@@ -180,7 +182,7 @@ static void ESP32_fini()
    *  SD card out -            0.1 mA
    */
 #if defined(ESP32S3)
-esp_sleep_enable_ext1_wakeup(1ULL << mode_button_pin, ESP_EXT1_WAKEUP_ANY_LOW);
+esp_sleep_enable_ext1_wakeup(1ULL << SLEEP_WAKE_UP_INT, ESP_EXT1_WAKEUP_ANY_LOW);
 #else
   esp_sleep_enable_ext1_wakeup(1ULL << mode_button_pin, ESP_EXT1_WAKEUP_ALL_LOW);
 #endif
@@ -362,13 +364,13 @@ static float ESP32_Battery_voltage()
           2 * voltage : voltage);
 }
 
-#include <SoftSPI.h>
-SoftSPI swSPI(SOC_GPIO_PIN_MOSI_T5S,
-              SOC_GPIO_PIN_MOSI_T5S, /* half duplex */
-              SOC_GPIO_PIN_SCK_T5S);
-
-static portMUX_TYPE EPD_ident_mutex;
+// #include <SoftSPI.h>
+// SoftSPI swSPI(SOC_GPIO_PIN_MOSI_T5S,
+//               SOC_GPIO_PIN_MOSI_T5S, /* half duplex */
+//               SOC_GPIO_PIN_SCK_T5S);
 #if defined(USE_EPAPER)
+static portMUX_TYPE EPD_ident_mutex;
+
 //static ep_model_id ESP32_EPD_ident()
 static int ESP32_EPD_ident()
 {
@@ -577,7 +579,7 @@ static int ESP32_WiFi_clients_count()
     return -1; /* error */
   }
 }
-
+#if !defined(BUILD_SKYVIEW_HD) && !defined(ESP32S3)
 static bool SD_is_ok = false;
 static bool ADB_is_open = false;
 
@@ -589,7 +591,7 @@ static bool ESP32_DB_init()
     return rval;
   }
 
-#if !defined(BUILD_SKYVIEW_HD)
+
 
   sdcard_files_to_open += (settings->adb   == DB_FLN    ? 1 : 0);
   sdcard_files_to_open += (settings->adb   == DB_OGN    ? 1 : 0);
@@ -639,7 +641,7 @@ static bool ESP32_DB_init()
       Serial.println(F("Failed to open ICAO DB\n"));
     }
   }
-#endif /* BUILD_SKYVIEW_HD */
+
 
   if (rval)
     ADB_is_open = true;
@@ -776,9 +778,10 @@ static void ESP32_DB_fini()
     SD.end();
     SD_is_ok = false;
   }
-#endif /* BUILD_SKYVIEW_HD */
 }
-
+#endif /* BUILD_SKYVIEW_HD */
+#endif
+#if defined(AUDIO)
 /* write sample data to I2S */
 int i2s_write_sample_nb(uint32_t sample)
 {
@@ -1028,6 +1031,8 @@ static void ESP32_TTS(char *message)
       delay(1000);
     }
 }
+#endif /* AUDIO */
+#if defined(BUTTONS)
 
 #include <AceButton.h>
 using namespace ace_button;
@@ -1166,6 +1171,7 @@ static void ESP32_Button_fini()
 {
 
 }
+#endif //BUTTONS
 
 static void ESP32_WDT_setup()
 {
@@ -1201,13 +1207,19 @@ const SoC_ops_t ESP32_ops = {
   ESP32_WiFi_Receive_UDP,
   ESP32_WiFi_Transmit_UDP,
   ESP32_WiFi_clients_count,
+  #if defined(DB)
   ESP32_DB_init,
   ESP32_DB_query,
   ESP32_DB_fini,
+  #endif
+  #if defined(AUDIO)
   ESP32_TTS,
+  #endif
+  #if defined(BUTTONS)
   ESP32_Button_setup,
   ESP32_Button_loop,
   ESP32_Button_fini,
+  #endif /* BUTTONS */
   ESP32_WDT_setup,
   ESP32_WDT_fini,
   &ESP32_Bluetooth_ops
