@@ -368,6 +368,14 @@ static float ESP32_Battery_voltage()
 // SoftSPI swSPI(SOC_GPIO_PIN_MOSI_T5S,
 //               SOC_GPIO_PIN_MOSI_T5S, /* half duplex */
 //               SOC_GPIO_PIN_SCK_T5S);
+   // SPI.begin(SOC_GPIO_PIN_SCK_TFT,
+   //           SOC_GPIO_PIN_MISO_TFT,
+   //           SOC_GPIO_PIN_MOSI_TFT,
+   //           SOC_GPIO_PIN_SS_TFT);
+   // SPI.setFrequency(40000000);
+   // SPI.setBitOrder(MSBFIRST);
+   // SPI.setDataMode(SPI_MODE0);
+   // SPI.beginTransaction(SPISettings(40000000, MSBFIRST, SPI_MODE0));
 #if defined(USE_EPAPER)
 static portMUX_TYPE EPD_ident_mutex;
 

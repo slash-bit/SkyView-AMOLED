@@ -22,14 +22,9 @@
 #include "Arduino_GFX_Library.h"
 #include "Arduino_DriveBus_Library.h"
 #include <Fonts/Picopixel.h>
-#include <Fonts/FreeSans9pt7b.h>
-#include <Fonts/FreeSansBold9pt7b.h>
-#include <Fonts/FreeSans12pt7b.h>
-#include <Fonts/FreeSansBold12pt7b.h>
-#include <Fonts/FreeSans18pt7b.h>
-#include <Fonts/FreeSansBold18pt7b.h>
-#include <Fonts/FreeSans24pt7b.h>
-#include <Fonts/FreeSansBold24pt7b.h>
+#include <Fonts/FreeMono24pt7b.h>
+#include <Fonts/FreeMonoBold12pt7b.h>
+#include <Fonts/FreeMonoBold24pt7b.h>
 
 #include <TimeLib.h>
 
@@ -197,8 +192,8 @@ static void EPD_Draw_NavBoxes()
 #endif /* !defined(ROUND_AMOLED) */
 void TFT_radar_Draw_Message(const char *msg1, const char *msg2)
 {
-  int16_t  tbx, tby;
-  uint16_t tbw, tbh;
+    int16_t  tbx, tby;
+    uint16_t tbw, tbh;
   uint16_t x, y;
 
   if (msg1 != NULL && strlen(msg1) != 0) {
@@ -206,9 +201,9 @@ void TFT_radar_Draw_Message(const char *msg1, const char *msg2)
     uint16_t radar_y = 466 / 2;
     uint16_t radar_w = 466;
     // gfx->fillScreen(RGB565_BLACK);
-    gfx->setTextColor(RGB565_RED);
+    gfx->setTextColor(RGB565_RED, RGB565_BLACK);
     // gfx->setTextSize(1);
-    gfx->setFont(&FreeSans24pt7b);
+    gfx->setFont(&FreeMonoBold24pt7b);
 
     // gfx->fillRect(radar_x, radar_y, radar_w, radar_w, BLACK);
 
@@ -218,7 +213,7 @@ void TFT_radar_Draw_Message(const char *msg1, const char *msg2)
       y = radar_y + tbh / 2;
       gfx->setCursor(x, y);
       //
-      gfx->fillRect(x, y - tbh, tbw, tbh, RGB565_BLUE);
+      gfx->fillRect(x, y - tbh, tbw + 3, tbh + 3, RGB565_BLUE);
       gfx->Display_Brightness(0);
       gfx->print(msg1);
       for (int i = 0; i <= 255; i++)
@@ -264,9 +259,9 @@ static void TFT_Draw_Radar()
   // draw radar
 
   // gfx->fillRect(0, 40, 240, 240, BLACK);
-  gfx->setTextColor(RGB565_GREEN, RGB565_BLACK);
+  gfx->setTextColor(RADAR_TEXT_COLOR, RGB565_BLACK);
   gfx->Display_Brightness(255);
-  gfx->setFont(&FreeSans18pt7b);
+  gfx->setFont(&FreeMonoBold12pt7b);
   gfx->getTextBounds("N", 0, 0, &tbx, &tby, &tbw, &tbh);
 
   uint16_t radar_x = 0;
@@ -317,15 +312,14 @@ static void TFT_Draw_Radar()
   }
     Serial.println("TFT_Draw_Radar: Draw Radar circles");
     // draw range circles
-    gfx->fillScreen(BLACK);
-    gfx->drawCircle(radar_center_x, radar_center_y, radius - 1,   NAVBOX_FRAME_COLOR2);
+    gfx->fillScreen(BLACK);;
     // draw range circles in grey
-    gfx->drawCircle(radar_center_x, radar_center_y, radius - 5,   WHITE);
-    gfx->drawCircle(radar_center_x, radar_center_y, round(radius / 3), WHITE);
-    gfx->drawCircle(radar_center_x, radar_center_y, round(radius / 3 * 2), WHITE);
+    gfx->drawCircle(radar_center_x, radar_center_y, radius - 5,   NAVBOX_FRAME_COLOR2);
+    gfx->drawCircle(radar_center_x, radar_center_y, round(radius / 3), NAVBOX_FRAME_COLOR2);
+    gfx->drawCircle(radar_center_x, radar_center_y, round(radius / 3 * 2), NAVBOX_FRAME_COLOR2);
     //draw crosshair in the center
-    gfx->drawLine(radar_center_x - 10, radar_center_y, radar_center_x + 10, radar_center_y, WHITE);
-    gfx->drawLine(radar_center_x, radar_center_y - 10, radar_center_x, radar_center_y + 10, WHITE);
+    gfx->drawLine(radar_center_x - 10, radar_center_y, radar_center_x + 10, radar_center_y, NAVBOX_FRAME_COLOR2);
+    gfx->drawLine(radar_center_x, radar_center_y - 10, radar_center_x, radar_center_y + 10, NAVBOX_FRAME_COLOR2);
 
         //draw distance marker as numbers on radar circles diaganolly from center to bottom right
     //draw distance marker as numbers on radar circles diaganolly from center to bottom right
@@ -344,7 +338,7 @@ static void TFT_Draw_Radar()
                     navbox3.value == ZOOM_HIGH   ? 1 : 1);
 
     gfx->setCursor(circle_mark1_x, circle_mark1_y);
-    gfx->setFont(&FreeSans18pt7b);
+    gfx->setFont(&FreeMonoBold12pt7b);
     // divide scale by 2 , if resul hs a decimal point, print only point and the decimal
     gfx->print(scale == 1 ? ".3" : scale == 3 ? "1" : scale == 6 ? "2" : "3");   
     gfx->setCursor(circle_mark2_x, circle_mark2_y);
@@ -398,7 +392,7 @@ static void TFT_Draw_Radar()
         Serial.print("TFT_Draw_Radar: Draw Aircraft Heading");
         // draw aircraft heading
         gfx->setTextColor(NAVBOX_TEXT_COLOR);
-        gfx->setFont(&FreeSans24pt7b);
+        gfx->setFont(&FreeMono24pt7b);
         gfx->setTextColor(RGB565_ORANGE, RGB565_BLACK);
         snprintf(cog_text, sizeof(cog_text), "%03d", ThisAircraft.Track);
         gfx->getTextBounds(cog_text, 0, 0, &tbx, &tby, &tbw, &tbh);
@@ -406,7 +400,7 @@ static void TFT_Draw_Radar()
         y = radar_y + radar_w / 2 - radius + (3 * tbh) / 2 - 16;
         gfx->setCursor(x, y);
         gfx->print(cog_text);
-        gfx->drawRoundRect(x - 2, y - tbh - 2, tbw + 8, tbh + 8, 4, NAVBOX_FRAME_COLOR2);
+        gfx->drawRoundRect(x -2 , y - tbh, tbw + 12, tbh + 10, 3, NAVBOX_FRAME_COLOR2);
         break;
     default:
   /* TBD */
@@ -508,7 +502,7 @@ static void TFT_Draw_Radar()
         } else if (Container[i].RelativeVertical < -EPD_RADAR_V_THRESHOLD) {
           color = RGB565_GREEN;
         } else {
-          color = RGB565_MAROON;
+          color = RGB565_RED;
         }
         switch (Container[i].alarm_level)
         {
@@ -539,7 +533,7 @@ static void TFT_Draw_Radar()
               Serial.println("Team pilot");
               gfx->drawCircle(radar_center_x + x,
                               radar_center_y - y,
-                              12, WHITE);
+                              20, RGB565_YELLOW);
               if (Container[i].RelativeVertical >  EPD_RADAR_V_THRESHOLD) {
                 // draw a '+' next to target triangle if buddy's relative height is more than 500ft
                 gfx->drawLine(radar_center_x + x - 2 + (int) epd_Points[3][0],
@@ -575,8 +569,8 @@ static void TFT_Draw_Radar()
             // Draw GA aircraft on radar
             gfx->fillCircle(radar_center_x + x,
                             radar_center_y - y,
-                            10, RED);
-            gfx->fillRect(radar_center_x + x - 9, radar_center_y - y - 1, 18, 3, BLACK);
+                            12, RED);
+            gfx->fillRect(radar_center_x + x - 11, radar_center_y - y - 1, 22, 3, BLACK);
             gfx->fillCircle(radar_center_x + x,
                             radar_center_y - y + 2,
                             3, BLACK);
@@ -711,7 +705,7 @@ static void TFT_Draw_Radar()
 void TFT_radar_setup()
 {
   EPD_zoom = settings->zoom;
-
+#if !defined(ROUND_AMOLED)
   uint16_t radar_x = 0;
   uint16_t radar_y = 0;
   uint16_t radar_w = 0;
@@ -755,6 +749,7 @@ void TFT_radar_setup()
   navbox4.height = navbox3.height;
   navbox4.value      = (int) (Battery_voltage() * 10.0);
   navbox4.timestamp  = millis();
+  #endif /* (ROUND_AMOLED) */
 }
 
 void TFT_radar_loop()
@@ -816,10 +811,18 @@ void TFT_radar_loop()
 void TFT_radar_zoom()
 {
   if (EPD_zoom < ZOOM_HIGH) EPD_zoom++;
+  gfx->setFont(&FreeMonoBold24pt7b);
+  gfx->setCursor(60, 240);
+  gfx->setTextColor(RGB565_ORANGE, RGB565_BLACK);
+  gfx->print("ZOOM IN");
 }
 
 void TFT_radar_unzoom()
 {
   if (EPD_zoom > ZOOM_LOWEST) EPD_zoom--;
+  gfx->setFont(&FreeMonoBold24pt7b);
+  gfx->setCursor(60, 240);
+  gfx->setTextColor(RGB565_ORANGE, RGB565_BLACK);
+  gfx->print("ZOOM OUT");
 }
 #endif /* USE_TFT */

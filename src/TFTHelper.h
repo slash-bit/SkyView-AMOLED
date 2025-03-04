@@ -20,7 +20,7 @@
 #define EPD_EXPIRATION_TIME     5 /* seconds */
 
 #define NO_DATA_TEXT            "NO DATA"
-#define NO_FIX_TEXT             "NO FIX"
+#define NO_FIX_TEXT             "NO FIX "
 
 #define NAVBOX1_TITLE           "ACFTS"
 #define NAVBOX2_TITLE           "DATA"
@@ -39,6 +39,7 @@
 #define NAVBOX_TEXT_COLOR 0xFCA6 //Deep Saffron rgb(255, 153, 51)
 #define NAVBOX_FRAME_COLOR2 0x4C8D //Stormcloud rgb(79, 102, 106)
 #define RADAR_CIRCLES_COLOR 0x4C8D //Stormcloud rgb(79, 102, 106)
+#define RADAR_TEXT_COLOR RGB565(0, 171, 0)  //Darker green rgb(0, 171, 0)
 
 typedef struct navbox_struct
 {

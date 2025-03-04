@@ -50,6 +50,7 @@
 #include "BatteryHelper.h"
 #include "GDL90Helper.h"
 #include "TFTHelper.h"
+#include "TouchHelper.h"
 
 #include "SkyView.h"
 // #include "TFTHelper.h"
@@ -141,6 +142,9 @@ void setup()
 
   Web_setup();
   Traffic_setup();
+#if defined(AMOLED)
+  Touch_setup();
+#endif
 
   SoC->WDT_setup();
 }

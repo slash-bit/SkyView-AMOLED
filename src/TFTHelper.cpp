@@ -5,7 +5,6 @@
 #include "EEPROMHelper.h"
 #include "TrafficHelper.h"
 #include "TFTHelper.h"
-#include <Fonts/FreeSerifBold24pt7b.h>
 #include <Adafruit_GFX.h>    // Core graphics library
 #include "Arduino_GFX_Library.h"
 #include "Arduino_DriveBus_Library.h"
@@ -13,8 +12,8 @@
 // #include <Adafruit_ST7789.h> // Hardware-specific library for ST7789
 // #include <Adafruit_ST77xx.h> // Hardware-specific library for ST7789
 
-#include <Fonts/FreeSans18pt7b.h>
-#include <Fonts/FreeSans24pt7b.h>
+#include <Fonts/FreeMonoBold12pt7b.h>
+#include <Fonts/FreeMonoBold24pt7b.h>
 
 
 #include "SkyView.h"
@@ -29,8 +28,6 @@ volatile int EPD_task_command = EPD_UPDATE_NONE;
  
 
 #if defined(AMOLED)
-
-volatile int8_t IIC_Interrupt_Flag;
 
 SPIClass SPI_2(HSPI);
 
@@ -72,13 +69,13 @@ void TFT_setup(void) {
   pinMode(LCD_EN, OUTPUT);
   digitalWrite(LCD_EN, LOW);
   gfx->begin(); // Start the display
-  gfx->setRotation(0);
+  gfx->setRotation(1);
   // add some other code
   delay(100);
   TFT_view_mode = settings->vmode;
   gfx->fillScreen(BLACK);
   digitalWrite(LCD_EN, HIGH);
-  gfx->setFont(&FreeSans24pt7b);
+  gfx->setFont(&FreeMonoBold24pt7b);
   // gfx->setTextSize(5);
   gfx->setCursor(50, 180);
   gfx->setTextColor(RGB565_WHITE);
@@ -90,7 +87,7 @@ void TFT_setup(void) {
       delay(3);
   }
   delay(1000);
-  gfx->setFont(&FreeSans18pt7b);
+  gfx->setFont(&FreeMonoBold12pt7b);
   // gfx->setTextSize(3);
   gfx->setCursor(70, 220);
   gfx->print("powered by SoftRF");
