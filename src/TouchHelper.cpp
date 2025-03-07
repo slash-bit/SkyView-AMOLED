@@ -1,12 +1,16 @@
 #include <Arduino.h>
-#include "TouchDrvCST92xx.h"
+// #include "TouchDrvCST92xx.h"
+#include <driver/touch/TouchDrvCSTXXX.hpp>
 #include "pin_config.h"
 #include "TouchHelper.h"
+#include "TFTHelper.h"
 #include "View_Radar_TFT.h"
 
 // Create an instance of the CST9217 class
 
 TouchDrvCST92xx touchSensor;
+
+uint8_t touchAddress = 0x5A;
 
 
 int16_t endX = -1, endY = -1;
@@ -27,11 +31,10 @@ void Touch_setup() {
     attachInterrupt(TP_INT, []()
     { IIC_Interrupt_Flag = true; }, FALLING);
   
-        // Set to skip register check, used when the touch device address conflicts with other I2C device addresses [0x5A]
-        touchSensor.jumpCheck();
+
   
-        touchSensor.setPins(-1, TP_INT);
-  if (touchSensor.begin(Wire, 0x5A, IIC_SDA, IIC_SCL) == false)
+        touchSensor.setPins(SENSOR_RST, SENSOR_IRQ);
+  if (touchSensor.begin(Wire, touchAddress, IIC_SDA, IIC_SCL) == false)
   {
       Serial.println("CST9217 initialization failed");
   }
@@ -39,8 +42,9 @@ void Touch_setup() {
   {
       Serial.print("Model :");
       Serial.println(touchSensor.getModelName());
+      touchSensor.setMaxCoordinates(466, 466); // Set touch max xy
   }
-  xTaskCreatePinnedToCore(touchTask, "Touch Task", 4096, NULL, 1, &touchTaskHandle, 1);
+  xTaskCreatePinnedToCore(touchTask, "Touch Task", 2048, NULL, 1, &touchTaskHandle, 1);
   }
 
 
@@ -83,17 +87,19 @@ void touchTask(void *parameter) {
             if (abs(deltaX) > abs(deltaY)) { // Horizontal swipe
               if (deltaX > 30) {
                 Serial.println("Swipe Left");
+                TFT_Mode();
               } else if (deltaX < -30) {
                 Serial.println("Swipe Right");
+                TFT_Mode();
               }
             } else if (abs(deltaX) < abs(deltaY)) { // Vertical swipe
                 if (deltaY > 50) {
                   Serial.println("Swipe Up - Radar Zoom Out");
-                  TFT_radar_unzoom();
+                  TFT_Down();
 
                 } else if (deltaY < -50) {
                   Serial.println("Swipe Down - Radar Zoom In");
-                  TFT_radar_zoom();
+                  TFT_Up();
                 }
               } else if (abs(deltaX) < 50 && abs(deltaY) < 50) {
                 Serial.println("Tap");

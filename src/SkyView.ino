@@ -90,7 +90,14 @@ void setup()
   Serial.println(String(SoC->getChipId(), HEX));
   Serial.println(F("Copyright (C) 2019-2021 Linar Yusupov. All rights reserved."));
   // Serial.flush();
-
+     // Check if PSRAM is available
+  if (psramFound()) {
+  Serial.println("PSRAM is enabled and available!");
+  Serial.printf("Total PSRAM: %d bytes\n", ESP.getPsramSize());
+  Serial.printf("Free PSRAM: %d bytes\n", ESP.getFreePsram());
+  } else {
+  Serial.println("PSRAM is NOT enabled or not available!");
+  }
   EEPROM_setup();
   Battery_setup();
 #if defined(BUTTONS)

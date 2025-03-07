@@ -16,8 +16,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include <stdint.h>
+#include <driver/display/CO5300.h>
+#include "Arduino_DriveBus_Library.h"
+#include "TFT_eSPI.h"
+#include <../pins_config.h>
+
 #if defined(USE_TFT)
+#define SENSOR_SDA  7
+#define SENSOR_SCL  6
+#define SENSOR_IRQ  9
+#define SENSOR_RST  8
+
 #define EPD_EXPIRATION_TIME     5 /* seconds */
+#define TFT_EXPIRATION_TIME     60 /* seconds for Text display*/ 
 
 #define NO_DATA_TEXT            "NO DATA"
 #define NO_FIX_TEXT             "NO FIX "
@@ -30,7 +41,7 @@
 #define isTimeToDisplay()       (millis() - EPDTimeMarker > 2000)
 #define maxof2(a,b)             (a > b ? a : b)
 
-#define EPD_RADAR_V_THRESHOLD   50      /* metres */
+#define EPD_RADAR_V_THRESHOLD   2      /* metres set temporary*/
 
 #define TEXT_VIEW_LINE_LENGTH   13      /* characters */
 #define TEXT_VIEW_LINE_SPACING  15      /* pixels */
@@ -40,6 +51,10 @@
 #define NAVBOX_FRAME_COLOR2 0x4C8D //Stormcloud rgb(79, 102, 106)
 #define RADAR_CIRCLES_COLOR 0x4C8D //Stormcloud rgb(79, 102, 106)
 #define RADAR_TEXT_COLOR RGB565(0, 171, 0)  //Darker green rgb(0, 171, 0)
+
+#define display_column_offset 6 //the H0175Y003AM display has a horizontal offset
+
+
 
 typedef struct navbox_struct
 {
@@ -52,12 +67,7 @@ typedef struct navbox_struct
   uint32_t  timestamp;
 } navbox_t;
 
-enum
-{
-	EPD_UPDATE_NONE,
-	EPD_UPDATE_SLOW,
-	EPD_UPDATE_FAST
-};
+
 
 void TFT_setup();
 void TFT_loop();

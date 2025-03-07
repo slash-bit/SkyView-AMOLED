@@ -19,12 +19,12 @@
 //   https://github.com/nbonniere/SoftRF/tree/master/software/firmware/source/SkyView
 #if defined(USE_TFT)
 #include "TFTHelper.h"
-#include "Arduino_GFX_Library.h"
+// #include "Arduino_GFX_Library.h"
 #include "Arduino_DriveBus_Library.h"
-#include <Fonts/Picopixel.h>
-#include <Fonts/FreeMono24pt7b.h>
-#include <Fonts/FreeMonoBold12pt7b.h>
-#include <Fonts/FreeMonoBold24pt7b.h>
+// #include <Fonts/Picopixel.h>
+// #include <Fonts/FreeMono24pt7b.h>
+// #include <Fonts/FreeMonoBold12pt7b.h>
+// #include <Fonts/FreeMonoBold24pt7b.h>
 
 #include <TimeLib.h>
 
@@ -37,15 +37,16 @@
 
 #include "SkyView.h"
 
-// #include <TFT_eSPI.h> // Include the TFT_eSPI library
+#include <TFT_eSPI.h> // Include the TFT_eSPI library
+#include <driver/display/CO5300.h>
 // #include <Adafruit_GFX.h> // Include the Adafruit_GFX library
 // #include <Adafruit_ST7789.h> // Include the Adafruit ST7789 library
 
 // extern Adafruit_ST7789 tft;
 //define gfx
-extern Arduino_GFX *gfx;
-
-extern GFXcanvas16 canvas_radar;
+extern TFT_eSPI tft;
+extern TFT_eSprite sprite;
+extern TFT_eSprite sprite2;
 
 static navbox_t navbox1;
 static navbox_t navbox2;
@@ -67,6 +68,9 @@ const float epd_Arrow[ICON_ARROW_POINTS][2] = {{-6,5},{0,-6},{6,5},{0,2}};
 #endif //ICON_AIRPLANE
 #define ICON_TARGETS_POINTS 5
 const float epd_Target[ICON_TARGETS_POINTS][2] = {{4,4},{0,-6},{-4,4},{-5,-3},{0,2}};
+
+#define PG_TARGETS_POINTS 3 // triangle
+const float pg_Target[ICON_TARGETS_POINTS][2] = {{-10,8},{10,8},{0,-9}};
 
 #define MAX_DRAW_POINTS 12
 
@@ -192,54 +196,36 @@ static void EPD_Draw_NavBoxes()
 #endif /* !defined(ROUND_AMOLED) */
 void TFT_radar_Draw_Message(const char *msg1, const char *msg2)
 {
-    int16_t  tbx, tby;
-    uint16_t tbw, tbh;
-  uint16_t x, y;
+    // int16_t  tbx, tby;
+    // uint16_t tbw, tbh;
+    // uint16_t x, y;
 
   if (msg1 != NULL && strlen(msg1) != 0) {
-    uint16_t radar_x = 0;
-    uint16_t radar_y = 466 / 2;
-    uint16_t radar_w = 466;
-    // gfx->fillScreen(RGB565_BLACK);
-    gfx->setTextColor(RGB565_RED, RGB565_BLACK);
-    // gfx->setTextSize(1);
-    gfx->setFont(&FreeMonoBold24pt7b);
-
-    // gfx->fillRect(radar_x, radar_y, radar_w, radar_w, BLACK);
+    // uint16_t radar_x = 0;
+    // uint16_t radar_y = 466 / 2;
+    // uint16_t radar_w = 466;
+    sprite.setTextDatum(MC_DATUM);
+    sprite.fillSprite(TFT_BLACK);
+    sprite.setTextColor(TFT_RED, TFT_BLACK);
 
     if (msg2 == NULL) {
-      gfx->getTextBounds(msg1, 0, 0, &tbx, &tby, &tbw, &tbh);
-      x = (radar_w - tbw) / 2;
-      y = radar_y + tbh / 2;
-      gfx->setCursor(x, y);
-      //
-      gfx->fillRect(x, y - tbh, tbw + 3, tbh + 3, RGB565_BLUE);
-      gfx->Display_Brightness(0);
-      gfx->print(msg1);
+      sprite.drawString(msg1, LCD_WIDTH / 2, LCD_HEIGHT / 2, 4);
+    } else {
+      sprite.drawString(msg1, LCD_WIDTH / 2, LCD_HEIGHT / 2 - 66, 4);
+      sprite.drawString(msg2, LCD_WIDTH / 2, LCD_HEIGHT / 2 + 26, 4);
+    }
+      lcd_brightness(0);
+      lcd_PushColors(display_column_offset, 0, 466, 466, (uint16_t*)sprite.getPointer());
       for (int i = 0; i <= 255; i++)
       {
-          gfx->Display_Brightness(i);
+        lcd_brightness(i);
           delay(2);
       }
       delay(200);
       for (int i = 255; i >= 0; i--)
       {
-          gfx->Display_Brightness(i);
+        lcd_brightness(i);
           delay(2);
-      }
-    } else {
-      // gfx->getTextBounds(msg1, 0, 0, &tbx, &tby, &tbw, &tbh);
-      // x = (radar_w - tbw) / 2;
-      // y = radar_y + radar_w / 2 - tbh;
-      gfx->setCursor(120, 200);
-      gfx->print(msg1);
-
-      // gfx->getTextBounds(msg2, 0, 0, &tbx, &tby, &tbw, &tbh);
-      // x = (radar_w - tbw) / 2;
-      // y = radar_y + radar_w / 2 + tbh;
-      gfx->setCursor(20, 266);
-      gfx->setTextColor(RGB565_MAGENTA);
-      gfx->print(msg2);
       }
   }
 }
@@ -252,29 +238,27 @@ static void TFT_Draw_Radar()
   uint16_t x;
   uint16_t y;
   char cog_text[6];
+  int16_t scale;
   
   /* divider is distance range */
   int32_t divider = 2000; // default 2000m 
 
   // draw radar
-
-  // gfx->fillRect(0, 40, 240, 240, BLACK);
-  gfx->setTextColor(RADAR_TEXT_COLOR, RGB565_BLACK);
-  gfx->Display_Brightness(255);
-  gfx->setFont(&FreeMonoBold12pt7b);
-  gfx->getTextBounds("N", 0, 0, &tbx, &tby, &tbw, &tbh);
+  sprite.fillSprite(TFT_BLACK);
+  sprite.setTextColor(TFT_GREEN, TFT_BLACK);
+  lcd_brightness(255);
+  sprite.setTextSize(1);
 
   uint16_t radar_x = 0;
-  uint16_t radar_y = (gfx->height() - gfx->width()) / 2;
-  uint16_t radar_w = gfx->width();
-  // Colour codes can be obtained from https://www.webfx.com/web-design/color-picker/color-chart/ values have to be converted to 565 hex format. Example #536878 > 0x534F
-  // gfx->fillRect(radar_x, radar_y, radar_w, radar_w, ST77XX_BLACK);
+  uint16_t radar_y = (LCD_HEIGHT - LCD_WIDTH) / 2;
+  uint16_t radar_w = LCD_WIDTH;
 
   uint16_t radar_center_x = radar_w / 2;
   uint16_t radar_center_y = radar_y + radar_w / 2;
   uint16_t radius = radar_w / 2 - 2;
 
   float epd_Points[MAX_DRAW_POINTS][2];
+  float pg_Points[MAX_DRAW_POINTS][2];
 
   if (settings->units == UNITS_METRIC || settings->units == UNITS_MIXED) {
     switch (EPD_zoom)
@@ -312,39 +296,35 @@ static void TFT_Draw_Radar()
   }
     Serial.println("TFT_Draw_Radar: Draw Radar circles");
     // draw range circles
-    gfx->fillScreen(BLACK);;
     // draw range circles in grey
-    gfx->drawCircle(radar_center_x, radar_center_y, radius - 5,   NAVBOX_FRAME_COLOR2);
-    gfx->drawCircle(radar_center_x, radar_center_y, round(radius / 3), NAVBOX_FRAME_COLOR2);
-    gfx->drawCircle(radar_center_x, radar_center_y, round(radius / 3 * 2), NAVBOX_FRAME_COLOR2);
+    sprite.drawSmoothCircle(radar_center_x, radar_center_y, radius - 5,   NAVBOX_FRAME_COLOR2, TFT_BLACK);
+    sprite.drawSmoothCircle(radar_center_x, radar_center_y, round(radius / 3), NAVBOX_FRAME_COLOR2, TFT_BLACK);
+    sprite.drawSmoothCircle(radar_center_x, radar_center_y, round(radius / 3 * 2), NAVBOX_FRAME_COLOR2, TFT_BLACK);
     //draw crosshair in the center
-    gfx->drawLine(radar_center_x - 10, radar_center_y, radar_center_x + 10, radar_center_y, NAVBOX_FRAME_COLOR2);
-    gfx->drawLine(radar_center_x, radar_center_y - 10, radar_center_x, radar_center_y + 10, NAVBOX_FRAME_COLOR2);
+    // sprite.drawLine(radar_center_x - 10, radar_center_y, radar_center_x + 10, radar_center_y, NAVBOX_FRAME_COLOR2);
+    // sprite.drawLine(radar_center_x, radar_center_y - 10, radar_center_x, radar_center_y + 10, NAVBOX_FRAME_COLOR2);
 
         //draw distance marker as numbers on radar circles diaganolly from center to bottom right
     //draw distance marker as numbers on radar circles diaganolly from center to bottom right
-    uint16_t circle_mark1_x = radar_center_x + abs(radius/3 * 0.74);
-    uint16_t circle_mark1_y = radar_center_y + abs(radius/3 * 0.74) - 30;
+    uint16_t circle_mark1_x = radar_center_x + round(radius/3 * 0.7071);
+    uint16_t circle_mark1_y = radar_center_y + round(radius/3 * 0.7071);
 
-    uint16_t circle_mark2_x = radar_center_x + abs(radius/3*2 * 0.74) - 10;
-    uint16_t circle_mark2_y = radar_center_y + abs(radius/3*2 * 0.74) - 35;
+    uint16_t circle_mark2_x = radar_center_x + round(radius/3*2 * 0.7071);
+    uint16_t circle_mark2_y = radar_center_y + round(radius/3*2 * 0.7071);
 
-    uint16_t circle_mark3_x = radar_center_x + abs(radius * 0.74) - 20;
-    uint16_t circle_mark3_y = radar_center_y + abs(radius * 0.74) - 40;
+    uint16_t circle_mark3_x = radar_center_x + round(radius * 0.7071) - 4;
+    uint16_t circle_mark3_y = radar_center_y + round(radius * 0.7071) - 4;
 
-    uint16_t scale = (navbox3.value == ZOOM_LOWEST ? 9 :
+    uint16_t zoom = (navbox3.value == ZOOM_LOWEST ? 9 :
                     navbox3.value == ZOOM_LOW    ? 6 :
                     navbox3.value == ZOOM_MEDIUM ? 3 :
                     navbox3.value == ZOOM_HIGH   ? 1 : 1);
 
-    gfx->setCursor(circle_mark1_x, circle_mark1_y);
-    gfx->setFont(&FreeMonoBold12pt7b);
+    sprite.setCursor(circle_mark1_x, circle_mark1_y);
     // divide scale by 2 , if resul hs a decimal point, print only point and the decimal
-    gfx->print(scale == 1 ? ".3" : scale == 3 ? "1" : scale == 6 ? "2" : "3");   
-    gfx->setCursor(circle_mark2_x, circle_mark2_y);
-    gfx->print(scale == 1 ? ".6" : scale == 3 ? "2" : scale == 6 ? "4" : "6"); 
-    gfx->setCursor(circle_mark3_x, circle_mark3_y);
-    gfx->print(scale);
+    sprite.drawString(zoom == 1 ? ".3" : zoom == 3 ? "1" : zoom == 6 ? "2" : "3", circle_mark1_x, circle_mark1_y, 4);   
+    sprite.drawString(zoom == 1 ? ".6" : zoom == 3 ? "2" : zoom == 6 ? "4" : "6", circle_mark2_x, circle_mark2_y, 4); ;
+    sprite.drawNumber(zoom, circle_mark3_x, circle_mark3_y, 4);
 
     Serial.println("TFT_Draw_Radar: Draw Radar circles done");
     Serial.print("Free heap: ");
@@ -356,62 +336,54 @@ static void TFT_Draw_Radar()
     {
     case DIRECTION_NORTH_UP:
         // draw W, E, N, S
+        tbw = tft.textWidth("W", 4);
+        tbh = tft.fontHeight(4);
         x = radar_x + radar_w / 2 - radius + tbw / 2;
         y = radar_y + (radar_w + tbh) / 2;
-        gfx->setTextSize(2);
-        gfx->setCursor(x, y);
-        gfx->print("W");
-        x = radar_x + radar_w / 2 + radius - (3 * tbw) / 2;
-        y = radar_y + (radar_w + tbh) / 2;
-        gfx->setCursor(x, y);
-        gfx->print("E");
-        x = radar_x + (radar_w - tbw) / 2;
-        y = radar_y + radar_w / 2 - radius + (3 * tbh) / 2;
-        gfx->setCursor(x, y);
-        gfx->print("N");
-        x = radar_x + (radar_w - tbw) / 2;
-        y = radar_y + radar_w / 2 + radius - tbh / 2;
-        gfx->setCursor(x, y);
-        gfx->print("S");
+        sprite.drawString("W", x, y, 4);
+        x = radar_x + radar_w / 2 + radius - tbw / 2;
+        y = radar_y + radar_w / 2;
+        sprite.drawString("E", x, y, 4);
+        x = radar_x + radar_w / 2;
+        y = radar_y + radar_w / 2 - radius + tbh / 2;
+        sprite.drawString("N", x, y, 4);
+        x = radar_x + radar_w / 2;
+        y = radar_y + radar_w / 2 + radius - tbh / 2; 
+        sprite.drawString("S", x, y, 4);
         break;
     case DIRECTION_TRACK_UP:
         // draw L, R, B
-        x = radar_x + radar_w / 2 - radius + tbw / 2;
+        x = radar_x + radar_w / 2 - radius + tbw + 2;
         y = radar_y + (radar_w + tbh) / 2;
-        gfx->setTextSize(1);
-        gfx->setCursor(x, y);
-        gfx->print("L");
-        x = radar_x + radar_w / 2 + radius - (3 * tbw) / 2;
+        sprite.drawString("L", x, y, 4);
+        x = radar_x + radar_w / 2 + radius - tbw - 2;
         y = radar_y + (radar_w + tbh) / 2;
-        gfx->setCursor(x, y);
-        gfx->print("R");
+        sprite.drawString("R", x, y, 4);
         // x = radar_x + (radar_w - tbw) / 2;
         // y = radar_y + radar_w / 2 + radius - tbh / 2;
         // gfx->setCursor(x, y);
         // gfx->print("B");
         Serial.print("TFT_Draw_Radar: Draw Aircraft Heading");
         // draw aircraft heading
-        gfx->setTextColor(NAVBOX_TEXT_COLOR);
-        gfx->setFont(&FreeMono24pt7b);
-        gfx->setTextColor(RGB565_ORANGE, RGB565_BLACK);
+        sprite.setTextColor(TFT_ORANGE, TFT_BLACK);
         snprintf(cog_text, sizeof(cog_text), "%03d", ThisAircraft.Track);
-        gfx->getTextBounds(cog_text, 0, 0, &tbx, &tby, &tbw, &tbh);
-        x = radar_x + (radar_w - tbw) / 2 - 5;
-        y = radar_y + radar_w / 2 - radius + (3 * tbh) / 2 - 16;
-        gfx->setCursor(x, y);
-        gfx->print(cog_text);
-        gfx->drawRoundRect(x -2 , y - tbh, tbw + 12, tbh + 10, 3, NAVBOX_FRAME_COLOR2);
+        // gfx->getTextBounds(cog_text, 0, 0, &tbx, &tby, &tbw, &tbh);
+        tbw = tft.textWidth(cog_text, 7);
+        tbh = tft.fontHeight(7);
+        x = radar_x + radar_w / 2;
+        y = radar_y + radar_w / 2 - radius + tbh / 2 + 4;
+        sprite.drawSmoothRoundRect(x - tbw /2 - 2, y - tbh /2, 3, 4, tbw + 4, tbh + 4, NAVBOX_FRAME_COLOR2, TFT_BLACK);
+        sprite.drawString(cog_text, x, y, 7);
         break;
     default:
   /* TBD */
     break;
         }
-    Serial.print("Free heap: ");
-    Serial.println(ESP.getFreeHeap());
+
   {
+    // Calculating traffic
     float trSin = sin_approx(-ThisAircraft.Track);
-    float trCos = cos_approx(-ThisAircraft.Track);
-    Serial.println("Calculating traffic");
+    float trCos = cos_approx(-ThisAircraft.Track);    
     for (int i=0; i < MAX_TRACKING_OBJECTS; i++) {
       if (Container[i].ID && (now() - Container[i].timestamp) <= EPD_EXPIRATION_TIME) {
 
@@ -420,7 +392,6 @@ static void TFT_Draw_Radar()
         float tgtSin;
         float tgtCos;
         float climb;
-        int Acfttype;
         int color;
 
         bool isTeam = (Container[i].ID == settings->team);
@@ -428,7 +399,6 @@ static void TFT_Draw_Radar()
         rel_x = Container[i].RelativeEast;
         rel_y = Container[i].RelativeNorth;
         climb = Container[i].ClimbRate;
-        Acfttype = Container[i].AcftType;
         tgtSin = sin_approx(Container[i].Track);
         tgtCos = cos_approx(Container[i].Track);
 
@@ -436,6 +406,10 @@ static void TFT_Draw_Radar()
           epd_Points[i][0] = epd_Target[i][0];
           epd_Points[i][1] = epd_Target[i][1];
           EPD_2D_Rotate(epd_Points[i][0], epd_Points[i][1], tgtCos, tgtSin);
+        }
+        for (int i=0; i < PG_TARGETS_POINTS; i++) {
+          pg_Points[i][0] = pg_Target[i][0];
+          pg_Points[i][1] = pg_Target[i][1];
         }
 #if defined(DEBUG_CONTAINER)
         Serial.print(F(" ID="));
@@ -446,6 +420,7 @@ static void TFT_Draw_Radar()
 
         Serial.print(F(" RelativeNorth=")); Serial.println(Container[i].RelativeNorth);
         Serial.print(F(" RelativeEast="));  Serial.println(Container[i].RelativeEast);
+        Serial.print(F(" RelativeVertical="));  Serial.println(Container[i].RelativeVertical);
         Serial.print(F(" ClimbRate="));  Serial.println(Container[i].ClimbRate);
         Serial.print(F(" AcftType="));  Serial.println(Container[i].AcftType);
 
@@ -458,6 +433,8 @@ static void TFT_Draw_Radar()
             EPD_2D_Rotate(rel_x, rel_y, trCos, trSin);
             for (int i=0; i < ICON_TARGETS_POINTS; i++)
                EPD_2D_Rotate(epd_Points[i][0], epd_Points[i][1], trCos, -trSin);
+            for (int i=0; i < PG_TARGETS_POINTS; i++)
+                EPD_2D_Rotate(pg_Points[i][0], pg_Points[i][1], trCos, -trSin);
             break;
           default:
             /* TBD */
@@ -498,98 +475,79 @@ static void TFT_Draw_Radar()
         scale = Container[i].alarm_level + 1;
         //color based on ClimbRate
         if (Container[i].RelativeVertical >  EPD_RADAR_V_THRESHOLD) {
-          color = RGB565_CYAN;
+          color = TFT_CYAN;
         } else if (Container[i].RelativeVertical < -EPD_RADAR_V_THRESHOLD) {
-          color = RGB565_GREEN;
+          color = TFT_GREEN;
         } else {
-          color = RGB565_RED;
+          color = TFT_RED;
         }
         switch (Container[i].alarm_level)
         {
         case 0:
-          switch (Acfttype)
+          switch (Container[i].AcftType)
           {
           case 0: //Paraglider -  (temp 0 ) draw target as triangle
           // based on climb/sink rate point triangle up or down
-            if (climb >= 0) {
-              gfx->fillTriangle(radar_center_x + x + (int)epd_Points[0][0],
-                                radar_center_y - y + (int)epd_Points[0][1],
-                                radar_center_x + x + (int)epd_Points[1][0],
-                                radar_center_y - y + (int)epd_Points[1][1],
-                                radar_center_x + x + (int)epd_Points[4][0],
-                                radar_center_y - y + (int)epd_Points[4][1],
-                                color);
-            } else {
-              gfx->fillTriangle(radar_center_x + x + (int)epd_Points[2][0],
-                                radar_center_y - y + (int)epd_Points[2][1],
-                                radar_center_x + x + (int)epd_Points[1][0],
-                                radar_center_y - y + (int)epd_Points[1][1],
-                                radar_center_x + x + (int)epd_Points[4][0],
-                                radar_center_y - y + (int)epd_Points[4][1],
-                                color);
+            Serial.println("Aircraft Type: Paraglider");
+            for (int i=0; i < PG_TARGETS_POINTS; i++) {
+              Serial.print(pg_Points[i][0]);
+              Serial.print(", ");
+              Serial.println(pg_Points[i][1]);
             }
-            //draw circle around it, if it is team
-            if (isTeam) {
-              Serial.println("Team pilot");
-              gfx->drawCircle(radar_center_x + x,
-                              radar_center_y - y,
-                              20, RGB565_YELLOW);
-              if (Container[i].RelativeVertical >  EPD_RADAR_V_THRESHOLD) {
-                // draw a '+' next to target triangle if buddy's relative height is more than 500ft
-                gfx->drawLine(radar_center_x + x - 2 + (int) epd_Points[3][0],
-                            radar_center_y - y     + (int) epd_Points[3][1],
-                            radar_center_x + x + 2 + (int) epd_Points[3][0],
-                            radar_center_y - y     + (int) epd_Points[3][1],
-                            WHITE);
-                gfx->drawLine(radar_center_x + x     + (int) epd_Points[3][0],
-                            radar_center_y - y + 2 + (int) epd_Points[3][1],
-                            radar_center_x + x     + (int) epd_Points[3][0],
-                            radar_center_y - y - 2 + (int) epd_Points[3][1],
-                            WHITE);
-              } else if (Container[i].RelativeVertical < -EPD_RADAR_V_THRESHOLD) {
-                // draw a '-' next to target triangle
-                gfx->drawLine(radar_center_x + x - 2 + (int) epd_Points[3][0],
-                            radar_center_y - y     + (int) epd_Points[3][1],
-                            radar_center_x + x + 2 + (int) epd_Points[3][0],
-                            radar_center_y - y     + (int) epd_Points[3][1],
-                            WHITE);
-              } else {
-                    // TBD
-                }
-                    }
-            // gfx->fillTriangle(radar_center_x + x + (int)epd_Points[0][0],
-            //                     radar_center_y - y + (int)epd_Points[0][1],
-            //                     radar_center_x + x + (int)epd_Points[1][0],
-            //                     radar_center_y - y + (int)epd_Points[1][1],
-            //                     radar_center_x + x + (int)epd_Points[2][0],
-            //                     radar_center_y - y + (int)epd_Points[2][1],
-            //                     color);
+            if (climb >= 0) {
+              sprite.fillTriangle(radar_center_x + x + (int)pg_Points[0][0],
+                                radar_center_y - y + (int)pg_Points[0][1],
+                                radar_center_x + x + (int)pg_Points[1][0],
+                                radar_center_y - y + (int)pg_Points[1][1],
+                                radar_center_x + x + (int)pg_Points[2][0],
+                                radar_center_y - y - (int)pg_Points[2][1],
+                                color);
+              if (isTeam) {
+                sprite.drawSmoothCircle(radar_center_x + x,
+                  radar_center_y - y,
+                  14, TFT_LIGHTGREY, TFT_BLACK);
+              }
+            } else {
+              sprite.fillTriangle(radar_center_x + x + (int)pg_Points[0][0],
+                                radar_center_y - y + (int)pg_Points[0][1],
+                                radar_center_x + x + (int)pg_Points[1][0],
+                                radar_center_y - y + (int)pg_Points[1][1],
+                                radar_center_x + x + (int)pg_Points[2][0],
+                                radar_center_y - y + (int)pg_Points[2][1],
+                                color);
+              if (isTeam) {
+                sprite.drawSmoothCircle(radar_center_x + x,
+                  radar_center_y - y,
+                  14, TFT_LIGHTGREY, TFT_BLACK);
+              }
+            }       
+
             break;
           default: //Glider, Hanglider, ULM, Balloon
             // Draw GA aircraft on radar
-            gfx->fillCircle(radar_center_x + x,
+            sprite.fillSmoothCircle(radar_center_x + x,
                             radar_center_y - y,
-                            12, RED);
-            gfx->fillRect(radar_center_x + x - 11, radar_center_y - y - 1, 22, 3, BLACK);
-            gfx->fillCircle(radar_center_x + x,
+                            18, TFT_RED);
+            sprite.fillRect(radar_center_x + x - 17, radar_center_y - y - 1, 34, 4, TFT_BLACK);
+            sprite.fillCircle(radar_center_x + x,
                             radar_center_y - y + 2,
-                            3, BLACK);
+                            4, TFT_BLACK);
             break;
           }
-            break;
+          break;
         case 1:
         //break;
         case 2:
         //break;
         case 3:
-            gfx->fillTriangle(radar_center_x + x + scale * ((int)epd_Points[0][0]),
+            sprite.fillTriangle(radar_center_x + x + scale * ((int)epd_Points[0][0]),
                                 radar_center_y - y + scale * ((int)epd_Points[0][1]),
                                 radar_center_x + x + scale * ((int)epd_Points[1][0]),
                                 radar_center_y - y + scale * ((int)epd_Points[1][1]),
                                 radar_center_x + x + scale * ((int)epd_Points[4][0]),
                                 radar_center_y - y + scale * ((int)epd_Points[4][1]),
                                 color);
-            gfx->fillTriangle(radar_center_x + x + scale * ((int)epd_Points[2][0]),
+            sprite.fillTriangle(radar_center_x + x + scale * ((int)epd_Points[2][0]),
                                 radar_center_y - y + scale * ((int)epd_Points[2][1]),
                                 radar_center_x + x + scale * ((int)epd_Points[1][0]),
                                 radar_center_y - y + scale * ((int)epd_Points[1][1]),
@@ -624,32 +582,32 @@ static void TFT_Draw_Radar()
         /* TBD */
         break;
     }
-    gfx->drawLine(radar_center_x + (int) epd_Points[0][0],
+    sprite.drawLine(radar_center_x + (int) epd_Points[0][0],
                 radar_center_y + (int) epd_Points[0][1],
                 radar_center_x + (int) epd_Points[1][0],
                 radar_center_y + (int) epd_Points[1][1],
                 WHITE);
-    gfx->drawLine(radar_center_x + (int) epd_Points[2][0],
+    sprite.drawLine(radar_center_x + (int) epd_Points[2][0],
                 radar_center_y + (int) epd_Points[2][1],
                 radar_center_x + (int) epd_Points[3][0],
                 radar_center_y + (int) epd_Points[3][1],
                 WHITE);
-    gfx->drawLine(radar_center_x + (int) epd_Points[4][0],
+    sprite.drawLine(radar_center_x + (int) epd_Points[4][0],
                 radar_center_y + (int) epd_Points[4][1],
                 radar_center_x + (int) epd_Points[5][0],
                 radar_center_y + (int) epd_Points[5][1],
                 WHITE);
-    gfx->drawLine(radar_center_x + (int) epd_Points[6][0],
+    sprite.drawLine(radar_center_x + (int) epd_Points[6][0],
                 radar_center_y + (int) epd_Points[6][1],
                 radar_center_x + (int) epd_Points[7][0],
                 radar_center_y + (int) epd_Points[7][1],
                 WHITE);
-    gfx->drawLine(radar_center_x + (int) epd_Points[8][0],
+    sprite.drawLine(radar_center_x + (int) epd_Points[8][0],
                 radar_center_y + (int) epd_Points[8][1],
                 radar_center_x + (int) epd_Points[9][0],
                 radar_center_y + (int) epd_Points[9][1],
                 WHITE);
-    gfx->drawLine(radar_center_x + (int) epd_Points[10][0],
+    sprite.drawLine(radar_center_x + (int) epd_Points[10][0],
                 radar_center_y + (int) epd_Points[10][1],
                 radar_center_x + (int) epd_Points[11][0],
                 radar_center_y + (int) epd_Points[11][1],
@@ -674,29 +632,28 @@ static void TFT_Draw_Radar()
         /* TBD */
         break;
     }
-    gfx->drawLine(radar_center_x + (int) epd_Points[0][0],
-                radar_center_y + (int) epd_Points[0][1],
-                radar_center_x + (int) epd_Points[1][0],
-                radar_center_y + (int) epd_Points[1][1],
-                WHITE);
-    gfx->drawLine(radar_center_x + (int) epd_Points[1][0],
-                radar_center_y + (int) epd_Points[1][1],
-                radar_center_x + (int) epd_Points[2][0],
-                radar_center_y + (int) epd_Points[2][1],
-                WHITE);
-    gfx->drawLine(radar_center_x + (int) epd_Points[2][0],
-                radar_center_y + (int) epd_Points[2][1],
-                radar_center_x + (int) epd_Points[3][0],
-                radar_center_y + (int) epd_Points[3][1],
-                WHITE);
-    gfx->drawLine(radar_center_x + (int) epd_Points[3][0],
-                radar_center_y + (int) epd_Points[3][1],
-                radar_center_x + (int) epd_Points[0][0],
-                radar_center_y + (int) epd_Points[0][1],
-                WHITE);
+    sprite.drawLine(radar_center_x + 3 * (int) epd_Points[0][0],
+                radar_center_y + 3 * (int) epd_Points[0][1],
+                radar_center_x + 3 * (int) epd_Points[1][0],
+                radar_center_y + 3 * (int) epd_Points[1][1],
+                TFT_WHITE);
+    sprite.drawLine(radar_center_x + 3 * (int) epd_Points[1][0],
+                radar_center_y + 3 * (int) epd_Points[1][1],
+                radar_center_x + 3 * (int) epd_Points[2][0],
+                radar_center_y + 3 * (int) epd_Points[2][1],
+                TFT_WHITE);
+    sprite.drawLine(radar_center_x + 3 * (int) epd_Points[2][0],
+                radar_center_y + 3 * (int) epd_Points[2][1],
+                radar_center_x + 3 * (int) epd_Points[3][0],
+                radar_center_y + 3 * (int) epd_Points[3][1],
+                TFT_WHITE);
+    sprite.drawLine(radar_center_x + 3 * (int) epd_Points[3][0],
+                radar_center_y + 3 * (int) epd_Points[3][1],
+                radar_center_x + 3 * (int) epd_Points[0][0],
+                radar_center_y + 3 * (int) epd_Points[0][1],
+                TFT_WHITE);
 #endif //ICON_AIRPLANE
-  Serial.print("Free heap: ");  
-  Serial.println(ESP.getFreeHeap());  
+  lcd_PushColors(6, 0, LCD_WIDTH, LCD_HEIGHT, (uint16_t*)sprite.getPointer()); 
 
     }
 }
@@ -811,18 +768,29 @@ void TFT_radar_loop()
 void TFT_radar_zoom()
 {
   if (EPD_zoom < ZOOM_HIGH) EPD_zoom++;
-  gfx->setFont(&FreeMonoBold24pt7b);
-  gfx->setCursor(60, 240);
-  gfx->setTextColor(RGB565_ORANGE, RGB565_BLACK);
-  gfx->print("ZOOM IN");
+  sprite2.createSprite(120, 30);
+  sprite2.fillSprite(TFT_BLACK);
+  sprite2.setTextColor(TFT_ORANGE, TFT_BLACK);
+  sprite2.setTextDatum(MC_DATUM);
+  sprite2.drawString("ZOOM IN", 60, 15, 4);
+  // lcd_PushColors(173, 124, 120, 30, (uint16_t*)sprite.getPointer());
+  sprite2.pushToSprite(&sprite, 173, 124, TFT_BLACK);
+
+  // delay(500);
+  sprite2.deleteSprite();
 }
 
 void TFT_radar_unzoom()
 {
   if (EPD_zoom > ZOOM_LOWEST) EPD_zoom--;
-  gfx->setFont(&FreeMonoBold24pt7b);
-  gfx->setCursor(60, 240);
-  gfx->setTextColor(RGB565_ORANGE, RGB565_BLACK);
-  gfx->print("ZOOM OUT");
+  sprite2.createSprite(120, 30);
+  sprite2.fillSprite(TFT_BLACK);
+  sprite2.setTextColor(TFT_ORANGE, TFT_BLACK);
+  sprite2.setTextDatum(MC_DATUM);
+  sprite2.drawString("ZOOM OUT", 60, 15, 4);
+  // lcd_PushColors(173, 300, 120, 30, (uint16_t*)sprite.getPointer());
+  sprite2.pushToSprite(&sprite, 173, 300, TFT_BLACK);
+  // delay(500);
+  sprite2.deleteSprite();
 }
 #endif /* USE_TFT */

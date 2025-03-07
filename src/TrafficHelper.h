@@ -66,6 +66,7 @@ typedef struct traffic_struct {
 typedef struct traffic_by_dist_struct {
   traffic_t *fop;
   float     distance;
+  uint16_t lastSeen;
 } traffic_by_dist_t;
 
 #define ALARM_ZONE_NONE         10000  // meters
