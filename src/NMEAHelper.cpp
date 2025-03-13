@@ -145,14 +145,14 @@ static void NMEA_Parse_Character(char c)
         if (T_ClimbRate.isUpdated())
         {
           // Serial.print(F(" ClimbRate=")); Serial.println(T_ClimbRate.value());
-          // fo.ClimbRate = std::round(atof(T_ClimbRate.value()) * 10) / 10.0;
-          // Serial.print(F(" ClimbRate=")); Serial.println(fo.ClimbRate);
+          fo.ClimbRate = atof(T_ClimbRate.value());
+          // Serial.print(F(" fo.ClimbRate=")); Serial.println(fo.ClimbRate);
           /* TBD */
         }
         if (T_AcftType.isUpdated())
         {
         //  Serial.print(F(" AcftType=")); Serial.print(T_AcftType.value());
-          fo.AcftType = atoi(T_AcftType.value());
+          fo.AcftType = strtol(T_AcftType.value(), NULL, 16);
           // Serial.print(F(" AcftType=")); Serial.println(fo.AcftType);
         }
 

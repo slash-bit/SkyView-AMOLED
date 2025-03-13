@@ -44,7 +44,7 @@ void Touch_setup() {
       Serial.println(touchSensor.getModelName());
       touchSensor.setMaxCoordinates(466, 466); // Set touch max xy
   }
-  xTaskCreatePinnedToCore(touchTask, "Touch Task", 2048, NULL, 1, &touchTaskHandle, 1);
+  xTaskCreatePinnedToCore(touchTask, "Touch Task", 4096, NULL, 1, &touchTaskHandle, 1);
   }
 
 
@@ -58,8 +58,6 @@ void touchTask(void *parameter) {
     //   Serial.println("Interrupt triggered!");
         IIC_Interrupt_Flag = false; // Reset interrupt flag
       uint8_t points = touchSensor.getPoint(currentX, currentY, 1); // Read single touch point
-      Serial.print("Points: ");
-      Serial.println(points); 
   
       if (points > 0) {
         // Record the starting touch position and time
@@ -87,19 +85,19 @@ void touchTask(void *parameter) {
             if (abs(deltaX) > abs(deltaY)) { // Horizontal swipe
               if (deltaX > 30) {
                 Serial.println("Swipe Left");
-                TFT_Mode();
+                TFT_Mode(true);
               } else if (deltaX < -30) {
                 Serial.println("Swipe Right");
-                TFT_Mode();
+                TFT_Mode(false);
               }
             } else if (abs(deltaX) < abs(deltaY)) { // Vertical swipe
                 if (deltaY > 50) {
                   Serial.println("Swipe Up - Radar Zoom Out");
-                  TFT_Down();
+                  TFT_Up();
 
                 } else if (deltaY < -50) {
                   Serial.println("Swipe Down - Radar Zoom In");
-                  TFT_Up();
+                  TFT_Down();
                 }
               } else if (abs(deltaX) < 50 && abs(deltaY) < 50) {
                 Serial.println("Tap");

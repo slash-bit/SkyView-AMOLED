@@ -13,7 +13,7 @@ esp_adc_cal_characteristics_t *adc_characs =
         1, sizeof(esp_adc_cal_characteristics_t));
         
 #if defined(ESP32S3)
-static adc1_channel_t adc_channel = ADC1_GPIO5_CHANNEL;
+static adc1_channel_t adc_channel = ADC1_GPIO4_CHANNEL;
 static const adc_atten_t atten = ADC_ATTEN_DB_11;
 #else
 static adc1_channel_t adc_channel = ADC1_GPIO36_CHANNEL;

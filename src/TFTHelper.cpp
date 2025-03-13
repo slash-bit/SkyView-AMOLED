@@ -139,6 +139,9 @@ void TFT_loop(void) {
   case VIEW_MODE_TEXT:
     TFT_text_loop();
     break;
+  case VIEW_MODE_COMPASS:
+    TFT_compass_loop();
+    break;
   default:
     break;
   }
@@ -147,18 +150,41 @@ void TFT_loop(void) {
   delay(20);
 }
 
-void TFT_Mode()
+void TFT_Mode(boolean next)
 {
   if (hw_info.display == DISPLAY_TFT) {
 
     if (EPD_view_mode == VIEW_MODE_RADAR) {
+      if (next) {
       EPD_view_mode = VIEW_MODE_TEXT;
       EPD_display_frontpage = false;
-    }  else if (EPD_view_mode == VIEW_MODE_TEXT) {
-      EPD_view_mode = VIEW_MODE_RADAR;
-      EPD_display_frontpage = false;
+      }
+      else {
+        EPD_view_mode = VIEW_MODE_COMPASS;
+        EPD_display_frontpage = false;
+      }
+
+}   else if (EPD_view_mode == VIEW_MODE_TEXT) {
+        if (next) {
+          EPD_view_mode = VIEW_MODE_COMPASS;
+          EPD_display_frontpage = false;
+        }
+        else {  
+          EPD_view_mode = VIEW_MODE_RADAR;
+          EPD_display_frontpage = false;
+      }
+    }
+    else if (EPD_view_mode = VIEW_MODE_COMPASS) {
+      if (next) {
+        EPD_view_mode = VIEW_MODE_RADAR;
+        EPD_display_frontpage = false;
+      }
+      else {
+        EPD_view_mode = VIEW_MODE_TEXT; 
+        EPD_display_frontpage = false;
     }
   }
+}
 }
 
 void TFT_Up()

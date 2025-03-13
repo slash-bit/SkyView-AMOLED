@@ -41,7 +41,8 @@
 #define isTimeToDisplay()       (millis() - EPDTimeMarker > 2000)
 #define maxof2(a,b)             (a > b ? a : b)
 
-#define EPD_RADAR_V_THRESHOLD   2      /* metres set temporary*/
+#define TFT_RADAR_V_THRESHOLD   2      /* metres set temporary*/
+#define TEAM_EXPIRATION_TIME    120      /* seconds */
 
 #define TEXT_VIEW_LINE_LENGTH   13      /* characters */
 #define TEXT_VIEW_LINE_SPACING  15      /* pixels */
@@ -73,7 +74,7 @@ void TFT_setup();
 void TFT_loop();
 void TFT_fini(const char *);
 
-void TFT_Mode();
+void TFT_Mode(boolean next);
 void TFT_Up();
 void TFT_Down();
 void TFT_Message(const char *, const char *);
@@ -90,6 +91,7 @@ void TFT_text_loop();
 void TFT_text_next();
 void TFT_text_prev();
 void TFT_text_Draw_Message(const char *, const char *);
+void TFT_compass_loop();
 
 extern unsigned long EPDTimeMarker;
 extern bool EPD_display_frontpage;

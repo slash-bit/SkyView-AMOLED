@@ -39,6 +39,8 @@
 
 #include <TFT_eSPI.h> // Include the TFT_eSPI library
 #include <driver/display/CO5300.h>
+#include "helicopter_image.h"
+#include "glider_image.h"
 // #include <Adafruit_GFX.h> // Include the Adafruit_GFX library
 // #include <Adafruit_ST7789.h> // Include the Adafruit ST7789 library
 
@@ -47,6 +49,11 @@
 extern TFT_eSPI tft;
 extern TFT_eSprite sprite;
 extern TFT_eSprite sprite2;
+TFT_eSprite arrowSprite = TFT_eSprite(&tft);
+TFT_eSprite ownAcrft = TFT_eSprite(&tft);
+TFT_eSprite Acrft = TFT_eSprite(&tft);
+TFT_eSprite helicopterSprite = TFT_eSprite(&tft);
+TFT_eSprite gliderSprite = TFT_eSprite(&tft);
 
 static navbox_t navbox1;
 static navbox_t navbox2;
@@ -65,12 +72,15 @@ const float epd_Airplane[ICON_AIRPLANE_POINTS][2] = {{0,-4},{0,10},{-8,0},{9,0},
 #else  //ICON_AIRPLANE
 #define ICON_ARROW_POINTS 4
 const float epd_Arrow[ICON_ARROW_POINTS][2] = {{-6,5},{0,-6},{6,5},{0,2}};
+
+const float own_Points[ICON_ARROW_POINTS][2] = {{-6,5},{0,-6},{6,5},{0,2}};
 #endif //ICON_AIRPLANE
 #define ICON_TARGETS_POINTS 5
 const float epd_Target[ICON_TARGETS_POINTS][2] = {{4,4},{0,-6},{-4,4},{-5,-3},{0,2}};
 
 #define PG_TARGETS_POINTS 3 // triangle
-const float pg_Target[ICON_TARGETS_POINTS][2] = {{-10,8},{10,8},{0,-9}};
+const float pg_PointsUp[ICON_TARGETS_POINTS][2] = {{-10,8},{10,8},{0,-9}};
+const float pg_PointsDown[ICON_TARGETS_POINTS][2] = {{-10,8},{10,8},{0,9}};
 
 #define MAX_DRAW_POINTS 12
 
@@ -232,7 +242,6 @@ void TFT_radar_Draw_Message(const char *msg1, const char *msg2)
 
 static void TFT_Draw_Radar()
 {
-  Serial.println("TFT_Draw_Radar");
   int16_t tbx, tby;
   uint16_t tbw, tbh;
   uint16_t x;
@@ -294,7 +303,6 @@ static void TFT_Draw_Radar()
         break;
     }
   }
-    Serial.println("TFT_Draw_Radar: Draw Radar circles");
     // draw range circles
     // draw range circles in grey
     sprite.drawSmoothCircle(radar_center_x, radar_center_y, radius - 5,   NAVBOX_FRAME_COLOR2, TFT_BLACK);
@@ -325,13 +333,10 @@ static void TFT_Draw_Radar()
     sprite.drawString(zoom == 1 ? ".3" : zoom == 3 ? "1" : zoom == 6 ? "2" : "3", circle_mark1_x, circle_mark1_y, 4);   
     sprite.drawString(zoom == 1 ? ".6" : zoom == 3 ? "2" : zoom == 6 ? "4" : "6", circle_mark2_x, circle_mark2_y, 4); ;
     sprite.drawNumber(zoom, circle_mark3_x, circle_mark3_y, 4);
-
-    Serial.println("TFT_Draw_Radar: Draw Radar circles done");
+#if defined(DEBUG_HEAP) 
     Serial.print("Free heap: ");
     Serial.println(ESP.getFreeHeap());
-
-    Serial.println("TFT_Draw_Radar: Orientation symbols");
-
+#endif
     switch (settings->orientation)
     {
     case DIRECTION_NORTH_UP:
@@ -363,7 +368,7 @@ static void TFT_Draw_Radar()
         // y = radar_y + radar_w / 2 + radius - tbh / 2;
         // gfx->setCursor(x, y);
         // gfx->print("B");
-        Serial.print("TFT_Draw_Radar: Draw Aircraft Heading");
+
         // draw aircraft heading
         sprite.setTextColor(TFT_ORANGE, TFT_BLACK);
         snprintf(cog_text, sizeof(cog_text), "%03d", ThisAircraft.Track);
@@ -385,7 +390,7 @@ static void TFT_Draw_Radar()
     float trSin = sin_approx(-ThisAircraft.Track);
     float trCos = cos_approx(-ThisAircraft.Track);    
     for (int i=0; i < MAX_TRACKING_OBJECTS; i++) {
-      if (Container[i].ID && (now() - Container[i].timestamp) <= EPD_EXPIRATION_TIME) {
+      if (Container[i].ID && (now() - Container[i].timestamp) <= EPD_EXPIRATION_TIME && Container[i].ID != settings->team) {
 
         float rel_x;
         float rel_y;
@@ -407,10 +412,10 @@ static void TFT_Draw_Radar()
           epd_Points[i][1] = epd_Target[i][1];
           EPD_2D_Rotate(epd_Points[i][0], epd_Points[i][1], tgtCos, tgtSin);
         }
-        for (int i=0; i < PG_TARGETS_POINTS; i++) {
-          pg_Points[i][0] = pg_Target[i][0];
-          pg_Points[i][1] = pg_Target[i][1];
-        }
+        // for (int i=0; i < PG_TARGETS_POINTS; i++) {
+        //   pg_Points[i][0] = pg_Target[i][0];
+        //   pg_Points[i][1] = pg_Target[i][1];
+        // }
 #if defined(DEBUG_CONTAINER)
         Serial.print(F(" ID="));
         Serial.print((Container[i].ID >> 16) & 0xFF, HEX);
@@ -468,94 +473,110 @@ static void TFT_Draw_Radar()
 
         int16_t x = constrain((rel_x * radius) / divider, -32768, 32767);
         int16_t y = constrain((rel_y * radius) / divider, -32768, 32767);
-        Serial.println("TFT_Draw_Radar: Calculating Traffic Done!");
+#if defined(DEBUG_HEAP)
         Serial.print("Free heap: ");
         Serial.println(ESP.getFreeHeap());
         Serial.println("TFT_Draw_Radar: Draw  Traffic");
+#endif
         scale = Container[i].alarm_level + 1;
         //color based on ClimbRate
-        if (Container[i].RelativeVertical >  EPD_RADAR_V_THRESHOLD) {
+        if (now() - Container[i].timestamp >= TEAM_EXPIRATION_TIME) {
+          color = TFT_DARKGREY;
+        } else if (Container[i].RelativeVertical >  TFT_RADAR_V_THRESHOLD) {
           color = TFT_CYAN;
-        } else if (Container[i].RelativeVertical < -EPD_RADAR_V_THRESHOLD) {
+        } else if (Container[i].RelativeVertical < -TFT_RADAR_V_THRESHOLD) {
           color = TFT_GREEN;
         } else {
           color = TFT_RED;
         }
-        switch (Container[i].alarm_level)
+        switch (Container[i].AcftType)
         {
-        case 0:
-          switch (Container[i].AcftType)
-          {
-          case 0: //Paraglider -  (temp 0 ) draw target as triangle
-          // based on climb/sink rate point triangle up or down
-            Serial.println("Aircraft Type: Paraglider");
-            for (int i=0; i < PG_TARGETS_POINTS; i++) {
-              Serial.print(pg_Points[i][0]);
-              Serial.print(", ");
-              Serial.println(pg_Points[i][1]);
-            }
-            if (climb >= 0) {
-              sprite.fillTriangle(radar_center_x + x + (int)pg_Points[0][0],
-                                radar_center_y - y + (int)pg_Points[0][1],
-                                radar_center_x + x + (int)pg_Points[1][0],
-                                radar_center_y - y + (int)pg_Points[1][1],
-                                radar_center_x + x + (int)pg_Points[2][0],
-                                radar_center_y - y - (int)pg_Points[2][1],
-                                color);
-              if (isTeam) {
-                sprite.drawSmoothCircle(radar_center_x + x,
-                  radar_center_y - y,
-                  14, TFT_LIGHTGREY, TFT_BLACK);
-              }
-            } else {
-              sprite.fillTriangle(radar_center_x + x + (int)pg_Points[0][0],
-                                radar_center_y - y + (int)pg_Points[0][1],
-                                radar_center_x + x + (int)pg_Points[1][0],
-                                radar_center_y - y + (int)pg_Points[1][1],
-                                radar_center_x + x + (int)pg_Points[2][0],
-                                radar_center_y - y + (int)pg_Points[2][1],
-                                color);
-              if (isTeam) {
-                sprite.drawSmoothCircle(radar_center_x + x,
-                  radar_center_y - y,
-                  14, TFT_LIGHTGREY, TFT_BLACK);
-              }
-            }       
-
+          case 1: //Glider
+                  //Container[i].alarm_level
+              gliderSprite.createSprite(70, 62);
+              gliderSprite.fillSprite(TFT_BLACK);
+              gliderSprite.pushImage(0, 0, 70, 62, glider);
+              gliderSprite.setPivot(35, 31);
+              sprite.setPivot(radar_center_x + x, radar_center_y - y);
+              gliderSprite.pushRotated(&sprite, Container[i].Track), TFT_BLACK;
+             
             break;
-          default: //Glider, Hanglider, ULM, Balloon
-            // Draw GA aircraft on radar
+
+          case 3:    //helicopter
+          helicopterSprite.createSprite(48, 64);
+          helicopterSprite.fillSprite(TFT_BLACK);
+          helicopterSprite.pushImage(0, 0, 48, 64, helicopter);  
+          helicopterSprite.setPivot(24, 32);
+          sprite.setPivot(radar_center_x + x, radar_center_y - y);
+      
+          helicopterSprite.pushRotated(&sprite, Container[i].Track, TFT_BLACK);
+            // sprite.fillTriangle(radar_center_x + x + scale * ((int)epd_Points[0][0]),
+            //                     radar_center_y - y + scale * ((int)epd_Points[0][1]),
+            //                     radar_center_x + x + scale * ((int)epd_Points[1][0]),
+            //                     radar_center_y - y + scale * ((int)epd_Points[1][1]),
+            //                     radar_center_x + x + scale * ((int)epd_Points[4][0]),
+            //                     radar_center_y - y + scale * ((int)epd_Points[4][1]),
+            //                     color);
+            // sprite.fillTriangle(radar_center_x + x + scale * ((int)epd_Points[2][0]),
+            //                     radar_center_y - y + scale * ((int)epd_Points[2][1]),
+            //                     radar_center_x + x + scale * ((int)epd_Points[1][0]),
+            //                     radar_center_y - y + scale * ((int)epd_Points[1][1]),
+            //                     radar_center_x + x + scale * ((int)epd_Points[4][0]),
+            //                     radar_center_y - y + scale * ((int)epd_Points[4][1]),
+            //                     color);
+            break;
+          // case 6: //hang glider
+
+
+          //   break;
+          case 7: //Paraglider -  draw target as triangle
+              // based on climb/sink rate point triangle up or down
+              if (climb >= 0) {
+                sprite.fillTriangle(radar_center_x + x + (int)pg_PointsUp[0][0],
+                                  radar_center_y - y + (int)pg_PointsUp[0][1],
+                                  radar_center_x + x + (int)pg_PointsUp[1][0],
+                                  radar_center_y - y + (int)pg_PointsUp[1][1],
+                                  radar_center_x + x + (int)pg_PointsUp[2][0],
+                                  radar_center_y - y + (int)pg_PointsUp[2][1],
+                                  color);
+                if (isTeam) {
+                  sprite.drawSmoothCircle(radar_center_x + x,
+                    radar_center_y - y,
+                    14, TFT_LIGHTGREY, TFT_BLACK);
+                }
+              } else {
+                sprite.fillTriangle(radar_center_x + (int)pg_PointsDown[0][0],
+                                  radar_center_y - y + (int)pg_PointsDown[0][1],
+                                  radar_center_x + x + (int)pg_PointsDown[1][0],
+                                  radar_center_y - y + (int)pg_PointsDown[1][1],
+                                  radar_center_x + x + (int)pg_PointsDown[2][0],
+                                  radar_center_y - y + (int)pg_PointsDown[2][1],
+                                  color);
+                if (isTeam) {
+                  sprite.drawSmoothCircle(radar_center_x + x,
+                    radar_center_y - y,
+                    14, TFT_LIGHTGREY, TFT_BLACK);
+                }
+              }
+              break;    
+          case 11: //Baloon
             sprite.fillSmoothCircle(radar_center_x + x,
-                            radar_center_y - y,
+                          radar_center_y - y,
                             18, TFT_RED);
             sprite.fillRect(radar_center_x + x - 17, radar_center_y - y - 1, 34, 4, TFT_BLACK);
             sprite.fillCircle(radar_center_x + x,
                             radar_center_y - y + 2,
                             4, TFT_BLACK);
             break;
-          }
-          break;
-        case 1:
-        //break;
-        case 2:
-        //break;
-        case 3:
-            sprite.fillTriangle(radar_center_x + x + scale * ((int)epd_Points[0][0]),
-                                radar_center_y - y + scale * ((int)epd_Points[0][1]),
-                                radar_center_x + x + scale * ((int)epd_Points[1][0]),
-                                radar_center_y - y + scale * ((int)epd_Points[1][1]),
-                                radar_center_x + x + scale * ((int)epd_Points[4][0]),
-                                radar_center_y - y + scale * ((int)epd_Points[4][1]),
-                                color);
-            sprite.fillTriangle(radar_center_x + x + scale * ((int)epd_Points[2][0]),
-                                radar_center_y - y + scale * ((int)epd_Points[2][1]),
-                                radar_center_x + x + scale * ((int)epd_Points[1][0]),
-                                radar_center_y - y + scale * ((int)epd_Points[1][1]),
-                                radar_center_x + x + scale * ((int)epd_Points[4][0]),
-                                radar_center_y - y + scale * ((int)epd_Points[4][1]),
-                                color);
-            break;
-        default:
+          default:
+              sprite.fillSmoothCircle(radar_center_x + x,
+                radar_center_y - y,
+                  18, TFT_YELLOW);
+                  sprite.fillRect(radar_center_x + x - 17, radar_center_y - y - 1, 34, 4, TFT_BLACK);
+                  sprite.fillCircle(radar_center_x + x,
+                  radar_center_y - y + 2,
+                  4, TFT_BLACK);
+
             break;
         }
 
@@ -632,26 +653,56 @@ static void TFT_Draw_Radar()
         /* TBD */
         break;
     }
-    sprite.drawLine(radar_center_x + 3 * (int) epd_Points[0][0],
-                radar_center_y + 3 * (int) epd_Points[0][1],
-                radar_center_x + 3 * (int) epd_Points[1][0],
-                radar_center_y + 3 * (int) epd_Points[1][1],
-                TFT_WHITE);
-    sprite.drawLine(radar_center_x + 3 * (int) epd_Points[1][0],
-                radar_center_y + 3 * (int) epd_Points[1][1],
-                radar_center_x + 3 * (int) epd_Points[2][0],
-                radar_center_y + 3 * (int) epd_Points[2][1],
-                TFT_WHITE);
-    sprite.drawLine(radar_center_x + 3 * (int) epd_Points[2][0],
-                radar_center_y + 3 * (int) epd_Points[2][1],
-                radar_center_x + 3 * (int) epd_Points[3][0],
-                radar_center_y + 3 * (int) epd_Points[3][1],
-                TFT_WHITE);
-    sprite.drawLine(radar_center_x + 3 * (int) epd_Points[3][0],
-                radar_center_y + 3 * (int) epd_Points[3][1],
-                radar_center_x + 3 * (int) epd_Points[0][0],
-                radar_center_y + 3 * (int) epd_Points[0][1],
-                TFT_WHITE);
+    // draw own aircaft
+    ownAcrft.createSprite(36, 36);  
+    ownAcrft.fillSprite(TFT_BLACK);
+    ownAcrft.setPivot(18, 18);
+    radar_center_x = 18;
+    radar_center_y = 18;
+    ownAcrft.drawWideLine(radar_center_x + 3 * (int) own_Points[0][0],
+    radar_center_y + 3 * (int) own_Points[0][1],
+    radar_center_x + 3 * (int) own_Points[1][0],
+    radar_center_y + 3 * (int) own_Points[1][1],4,
+    TFT_DARKGREY, TFT_DARKGREY);
+    ownAcrft.drawWideLine(radar_center_x + 3 * (int) own_Points[1][0],
+    radar_center_y + 3 * (int) own_Points[1][1],
+    radar_center_x + 3 * (int) own_Points[2][0],
+    radar_center_y + 3 * (int) own_Points[2][1],4,
+    TFT_DARKGREY, TFT_DARKGREY);
+    ownAcrft.drawWideLine(radar_center_x + 3 * (int) own_Points[2][0],
+    radar_center_y + 3 * (int) own_Points[2][1],
+    radar_center_x + 3 * (int) own_Points[3][0],
+    radar_center_y + 3 * (int) own_Points[3][1],4,
+    TFT_DARKGREY, TFT_DARKGREY);
+    ownAcrft.drawWideLine(radar_center_x + 3 * (int) own_Points[3][0],
+    radar_center_y + 3 * (int) own_Points[3][1],
+    radar_center_x + 3 * (int) own_Points[0][0],
+    radar_center_y + 3 * (int) own_Points[0][1],4,
+    TFT_DARKGREY, TFT_DARKGREY);
+        /////// double line
+    ownAcrft.drawWideLine(radar_center_x + 3 * (int) own_Points[0][0],
+    radar_center_y + 3 * (int) own_Points[0][1],
+    radar_center_x + 3 * (int) own_Points[1][0],
+    radar_center_y + 3 * (int) own_Points[1][1],2,
+    TFT_WHITE, TFT_DARKGREY);
+    ownAcrft.drawWideLine(radar_center_x + 3 * (int) own_Points[1][0],
+    radar_center_y + 3 * (int) own_Points[1][1],
+    radar_center_x + 3 * (int) own_Points[2][0],
+    radar_center_y + 3 * (int) own_Points[2][1],2,
+    TFT_WHITE, TFT_DARKGREY); 
+    ownAcrft.drawWideLine(radar_center_x + 3 * (int) own_Points[2][0],
+    radar_center_y + 3 * (int) own_Points[2][1],
+    radar_center_x + 3 * (int) own_Points[3][0],
+    radar_center_y + 3 * (int) own_Points[3][1],2,
+    TFT_WHITE, TFT_DARKGREY);
+    ownAcrft.drawWideLine(radar_center_x + 3 * (int) own_Points[3][0],
+    radar_center_y + 3 * (int) own_Points[3][1],
+    radar_center_x + 3 * (int) own_Points[0][0],
+    radar_center_y + 3 * (int) own_Points[0][1],2,
+    TFT_WHITE, TFT_DARKGREY);
+    sprite.setPivot(233, 233);                             
+    ownAcrft.pushRotated(&sprite, ThisAircraft.Track, TFT_BLACK);
+
 #endif //ICON_AIRPLANE
   lcd_PushColors(6, 0, LCD_WIDTH, LCD_HEIGHT, (uint16_t*)sprite.getPointer()); 
 
@@ -728,11 +779,11 @@ void TFT_radar_loop()
       if (hasFix) {
         TFT_Draw_Radar();
       } else {
-        Serial.println("No FIX, Draw Message");
+        Serial.println("No FIX");
         TFT_radar_Draw_Message(NO_FIX_TEXT, NULL);
       }
     } else {
-      Serial.println("No DATA, Draw Message");
+      Serial.println("No DATA");
       // String ipAddress = WiFi.softAPIP().toString();
       // const char* msg2 = ("Wifi IP Address " + ipAddress).c_str();
       
@@ -759,8 +810,10 @@ void TFT_radar_loop()
 
     // EPD_Draw_NavBoxes();
     yield();
+#if defined(DEBUG_HEAP)
     Serial.print("Free heap: ");
     Serial.println(ESP.getFreeHeap());
+#endif /* DEBUG_HEAP */
     EPDTimeMarker = millis();
   }
 }
@@ -768,14 +821,14 @@ void TFT_radar_loop()
 void TFT_radar_zoom()
 {
   if (EPD_zoom < ZOOM_HIGH) EPD_zoom++;
-  sprite2.createSprite(120, 30);
+  sprite2.createSprite(120, 35);
   sprite2.fillSprite(TFT_BLACK);
   sprite2.setTextColor(TFT_ORANGE, TFT_BLACK);
   sprite2.setTextDatum(MC_DATUM);
   sprite2.drawString("ZOOM IN", 60, 15, 4);
-  // lcd_PushColors(173, 124, 120, 30, (uint16_t*)sprite.getPointer());
-  sprite2.pushToSprite(&sprite, 173, 124, TFT_BLACK);
-
+  sprite2.pushToSprite(&sprite, 173, 166, TFT_BLACK);
+  lcd_PushColors(0, 0, 466, 466, (uint16_t*)sprite.getPointer());
+  sprite2.deleteSprite();
   // delay(500);
   sprite2.deleteSprite();
 }
@@ -783,13 +836,14 @@ void TFT_radar_zoom()
 void TFT_radar_unzoom()
 {
   if (EPD_zoom > ZOOM_LOWEST) EPD_zoom--;
-  sprite2.createSprite(120, 30);
+  sprite2.createSprite(120, 35);
   sprite2.fillSprite(TFT_BLACK);
   sprite2.setTextColor(TFT_ORANGE, TFT_BLACK);
   sprite2.setTextDatum(MC_DATUM);
   sprite2.drawString("ZOOM OUT", 60, 15, 4);
-  // lcd_PushColors(173, 300, 120, 30, (uint16_t*)sprite.getPointer());
+  
   sprite2.pushToSprite(&sprite, 173, 300, TFT_BLACK);
+  lcd_PushColors(0, 0, 466, 466, (uint16_t*)sprite.getPointer());
   // delay(500);
   sprite2.deleteSprite();
 }
