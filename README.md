@@ -12,3 +12,4 @@ Bluetooth LE
 This repository is based on fork from Mosche Branner's version of SkyView and it sports some nice additions on top of original SkyView.
 My version is ported to PlatformIO - the tool of choice for building and compiling for various devices and screens.
 The firmware currently supports e-Paper screens, but will be also expanded to bright IPS based TFT colour screens .
+The original code was moved to branch Skyvew-MB06x-original_code.
