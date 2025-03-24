@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
+#if defined(USE_EPAPER)
 #include "EPDHelper.h"
 
 #include <Fonts/FreeMonoBold12pt7b.h>
@@ -356,3 +356,4 @@ void EPD_text_prev()
     EPD_current--;
   }
 }
+#endif /* USE_EPAPER */

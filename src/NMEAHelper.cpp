@@ -140,18 +140,20 @@ static void NMEA_Parse_Character(char c)
         {
 //          Serial.print(F(" GroundSpeed=")); Serial.print(T_GroundSpeed.value());
           fo.GroundSpeed = atoi(T_GroundSpeed.value());
-//          Serial.print(F(" GroundSpeed=")); Serial.println(fo.GroundSpeed);
+        //  Serial.print(F(" GroundSpeed=")); Serial.println(fo.GroundSpeed);
         }
         if (T_ClimbRate.isUpdated())
         {
-//          Serial.print(F(" ClimbRate=")); Serial.println(T_ClimbRate.value());
+          // Serial.print(F(" ClimbRate=")); Serial.println(T_ClimbRate.value());
+          fo.ClimbRate = atof(T_ClimbRate.value());
+          // Serial.print(F(" fo.ClimbRate=")); Serial.println(fo.ClimbRate);
           /* TBD */
         }
         if (T_AcftType.isUpdated())
         {
-//          Serial.print(F(" AcftType=")); Serial.print(T_AcftType.value());
-          fo.AcftType = atoi(T_AcftType.value());
-//          Serial.print(F(" AcftType=")); Serial.println(fo.AcftType);
+        //  Serial.print(F(" AcftType=")); Serial.print(T_AcftType.value());
+          fo.AcftType = strtol(T_AcftType.value(), NULL, 16);
+          // Serial.print(F(" AcftType=")); Serial.println(fo.AcftType);
         }
 
         old_level = ALARM_LEVEL_NONE;
@@ -194,7 +196,7 @@ static void NMEA_Parse_Character(char c)
 //          Serial.print(F(" AlarmLevel=")); Serial.print(S_AlarmLevel.value());
           NMEA_Status.alarm_level = atoi(S_AlarmLevel.value());
           fo.alarm_level = NMEA_Status.alarm_level;
-//          Serial.print(F(" AlarmLevel=")); Serial.println(NMEA_Status.alarm_level);
+        //  Serial.print(F(" AlarmLevel=")); Serial.println(NMEA_Status.alarm_level);
         }
         if (S_RelativeBearing.isUpdated())
         {
@@ -216,7 +218,7 @@ static void NMEA_Parse_Character(char c)
 //          Serial.print(F(" RelativeVertical=")); Serial.print(S_RelativeVertical.value());
           NMEA_Status.RelativeVertical = atoi(S_RelativeVertical.value());
           fo.RelativeVertical = NMEA_Status.RelativeVertical;     // meters
-//          Serial.print(F(" RelativeVertical=")); Serial.println(NMEA_Status.RelativeVertical);
+        //  Serial.print(F(" RelativeVertical=")); Serial.println(NMEA_Status.RelativeVertical);
         }
         if (S_RelativeDistance.isUpdated())
         {
@@ -412,6 +414,7 @@ void NMEA_loop()
               settings->connection, settings->bridge, settings->filter);
       NMEA_Out(buf);
       heartbeat = millis();
+      yield();
   }
 #endif
 

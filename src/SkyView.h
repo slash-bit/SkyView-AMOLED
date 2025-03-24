@@ -54,6 +54,10 @@ typedef struct hardware_info {
 
 } hardware_info_t;
 
+typedef struct buddy_info {
+	uint32_t id;
+	const char*  name;
+} buddy_info_t;
 enum
 {
 	SOFTRF_MODEL_STANDALONE,
@@ -87,7 +91,8 @@ enum
 	DISPLAY_NONE,
 	DISPLAY_EPD_2_7,
 	DISPLAY_OLED_2_4,
-	DISPLAY_EPD_4_7
+	DISPLAY_EPD_4_7,
+	DISPLAY_TFT
 };
 
 enum
@@ -154,7 +159,8 @@ enum
 {
 	VIEW_MODE_RADAR,
 	VIEW_MODE_TABLE,
-	VIEW_MODE_TEXT
+	VIEW_MODE_TEXT,
+	VIEW_MODE_COMPASS
 };
 
 enum

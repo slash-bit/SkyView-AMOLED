@@ -18,7 +18,7 @@
 
 // this version follows
 //   https://github.com/nbonniere/SoftRF/tree/master/software/firmware/source/SkyView
-
+#if defined(USE_EPAPER)
 #include "EPDHelper.h"
 
 #include <Fonts/Picopixel.h>
@@ -669,3 +669,4 @@ void EPD_radar_unzoom()
 {
   if (EPD_zoom > ZOOM_LOWEST) EPD_zoom--;
 }
+#endif /*USE_EPAPER*/

@@ -28,6 +28,7 @@
 
 #include "SoCHelper.h"
 #include "EPDHelper.h"
+#include "TFTHelper.h"
 #include "EEPROMHelper.h"
 #include "WiFiHelper.h"
 #include "BluetoothHelper.h"
@@ -49,6 +50,7 @@
 
 WebServer server ( 80 );
 
+#if defined(USE_EPAPER)
 /*
  * TTGO-T5S. Pin definition
 
@@ -110,12 +112,13 @@ P                       0,2,4,5,12,13,14,15,16,17,18,19,21,22,23,25,26,27,32,33,
  */
 GxEPD2_BW<GxEPD2_270, GxEPD2_270::HEIGHT> epd_waveshare_W3(GxEPD2_270(/*CS=15*/ 15, /*DC=*/ 27, /*RST=*/ 26, /*BUSY=*/ 25));
 GxEPD2_BW<GxEPD2_270_T91, GxEPD2_270_T91::HEIGHT> epd_waveshare_T91(GxEPD2_270_T91(/*CS=15*/ 15, /*DC=*/ 27, /*RST=*/ 26, /*BUSY=*/ 25));
+#endif
 
 static union {
   uint8_t efuse_mac[6];
   uint64_t chipmacid;
 };
-
+#if defined(SOUND)
 static uint8_t sdcard_files_to_open = 0;
 
 SPIClass uSD_SPI(HSPI);
@@ -144,6 +147,7 @@ i2s_pin_config_t pin_config = {
     .data_out_num = SOC_GPIO_PIN_DOUT,
     .data_in_num  = -1  // Not used
 };
+#endif /* SOUND*/
 
 // RTC_DATA_ATTR int bootCount = 0;
 
@@ -154,6 +158,7 @@ static uint32_t ESP32_getFlashId()
 
 static void ESP32_fini()
 {
+#if defined(BUTTON)
   int mode_button_pin = SOC_BUTTON_MODE_DEF;
 
   if (settings && (settings->adapter == ADAPTER_TTGO_T5S)) {
@@ -161,7 +166,7 @@ static void ESP32_fini()
 
     mode_button_pin = SOC_BUTTON_MODE_T5S;
   }
-
+#endif /* BUTTON */
   esp_wifi_stop();
   esp_bt_controller_disable();
   SPI.end();
@@ -176,8 +181,11 @@ static void ESP32_fini()
    *  SD card in  -            0.2 mA
    *  SD card out -            0.1 mA
    */
+#if defined(ESP32S3)
+esp_sleep_enable_ext1_wakeup(1ULL << SLEEP_WAKE_UP_INT, ESP_EXT1_WAKEUP_ANY_LOW);
+#else
   esp_sleep_enable_ext1_wakeup(1ULL << mode_button_pin, ESP_EXT1_WAKEUP_ALL_LOW);
-
+#endif
 //  Serial.println("Going to sleep now");
 //  Serial.flush();
 
@@ -337,8 +345,13 @@ static void ESP32_WiFiUDP_stopAll()
 
 static void ESP32_Battery_setup()
 {
+#if defined(ESP32S3)
+  calibrate_voltage(ADC1_GPIO4_CHANNEL);
+#else
+  
   calibrate_voltage(settings->adapter == ADAPTER_TTGO_T5S ?
                     ADC1_GPIO35_CHANNEL : ADC1_GPIO36_CHANNEL);
+#endif
 }
 
 static float ESP32_Battery_voltage()
@@ -351,11 +364,19 @@ static float ESP32_Battery_voltage()
           2 * voltage : voltage);
 }
 
-#include <SoftSPI.h>
-SoftSPI swSPI(SOC_GPIO_PIN_MOSI_T5S,
-              SOC_GPIO_PIN_MOSI_T5S, /* half duplex */
-              SOC_GPIO_PIN_SCK_T5S);
-
+// #include <SoftSPI.h>
+// SoftSPI swSPI(SOC_GPIO_PIN_MOSI_T5S,
+//               SOC_GPIO_PIN_MOSI_T5S, /* half duplex */
+//               SOC_GPIO_PIN_SCK_T5S);
+   // SPI.begin(SOC_GPIO_PIN_SCK_TFT,
+   //           SOC_GPIO_PIN_MISO_TFT,
+   //           SOC_GPIO_PIN_MOSI_TFT,
+   //           SOC_GPIO_PIN_SS_TFT);
+   // SPI.setFrequency(40000000);
+   // SPI.setBitOrder(MSBFIRST);
+   // SPI.setDataMode(SPI_MODE0);
+   // SPI.beginTransaction(SPISettings(40000000, MSBFIRST, SPI_MODE0));
+#if defined(USE_EPAPER)
 static portMUX_TYPE EPD_ident_mutex;
 
 //static ep_model_id ESP32_EPD_ident()
@@ -488,6 +509,7 @@ static void ESP32_EPD_update(int val)
 //  EPD_Update_Sync(val);
   EPD_task_command = val;
 }
+#endif /* USE_EPAPER */
 
 static size_t ESP32_WiFi_Receive_UDP(uint8_t *buf, size_t max_size)
 {
@@ -565,7 +587,7 @@ static int ESP32_WiFi_clients_count()
     return -1; /* error */
   }
 }
-
+#if !defined(BUILD_SKYVIEW_HD) && !defined(ESP32S3)
 static bool SD_is_ok = false;
 static bool ADB_is_open = false;
 
@@ -577,7 +599,7 @@ static bool ESP32_DB_init()
     return rval;
   }
 
-#if !defined(BUILD_SKYVIEW_HD)
+
 
   sdcard_files_to_open += (settings->adb   == DB_FLN    ? 1 : 0);
   sdcard_files_to_open += (settings->adb   == DB_OGN    ? 1 : 0);
@@ -627,7 +649,7 @@ static bool ESP32_DB_init()
       Serial.println(F("Failed to open ICAO DB\n"));
     }
   }
-#endif /* BUILD_SKYVIEW_HD */
+
 
   if (rval)
     ADB_is_open = true;
@@ -764,9 +786,10 @@ static void ESP32_DB_fini()
     SD.end();
     SD_is_ok = false;
   }
-#endif /* BUILD_SKYVIEW_HD */
 }
-
+#endif /* BUILD_SKYVIEW_HD */
+#endif
+#if defined(AUDIO)
 /* write sample data to I2S */
 int i2s_write_sample_nb(uint32_t sample)
 {
@@ -940,12 +963,12 @@ static void ESP32_TTS(char *message)
         //Serial.print(F("no SD card"));
         return;
       }
-
+#if defined(USE_EPAPER)
       while (!SoC->EPD_is_ready()) {yield();}
       EPD_Message("VOICE", "ALERT");
       SoC->EPD_update(EPD_UPDATE_FAST);
       while (!SoC->EPD_is_ready()) {yield();}
-
+#endif /* USE_EPAPER */
       bool wdt_status = loopTaskWDTEnabled;
 
       if (wdt_status) {
@@ -1016,44 +1039,58 @@ static void ESP32_TTS(char *message)
       delay(1000);
     }
 }
+#endif /* AUDIO */
+#if defined(BUTTONS)
 
 #include <AceButton.h>
 using namespace ace_button;
 
-AceButton button_mode(SOC_BUTTON_MODE_T5S);
-AceButton button_up  (SOC_BUTTON_UP_T5S);
-AceButton button_down(SOC_BUTTON_DOWN_T5S);
+AceButton button_mode(BUTTON_MODE_PIN);
+// AceButton button_up  (SOC_BUTTON_UP_T5S);
+// AceButton button_down(SOC_BUTTON_DOWN_T5S);
 
 // The event handler for the button.
 void handleEvent(AceButton* button, uint8_t eventType,
     uint8_t buttonState) {
 
-#if 0
+// #if 0
   // Print out a message for all events.
   if        (button == &button_mode) {
     Serial.print(F("MODE "));
-  } else if (button == &button_up) {
-    Serial.print(F("UP   "));
-  } else if (button == &button_down) {
-    Serial.print(F("DOWN "));
-  }
+  // } else if (button == &button_up) {
+  //   Serial.print(F("UP   "));
+  // } else if (button == &button_down) {
+  //   Serial.print(F("DOWN "));
+  // }
 
   Serial.print(F("handleEvent(): eventType: "));
   Serial.print(eventType);
   Serial.print(F("; buttonState: "));
   Serial.println(buttonState);
-#endif
+// #endif
 
   switch (eventType) {
     case AceButton::kEventPressed:
       break;
     case AceButton::kEventReleased:
       if (button == &button_mode) {
+#if defined(USE_EPAPER)
         EPD_Mode();
-      } else if (button == &button_up) {
-        EPD_Up();
-      } else if (button == &button_down) {
-        EPD_Down();
+#elif defined(USE_TFT)
+        TFT_Mode(true);
+#endif /* USE_EPAPER */
+//       } else if (button == &button_up) {
+// #if defined(USE_EPAPER)
+//         EPD_Up();
+// #elif defined(USE_TFT)
+//         TFT_Up();
+// #endif /* USE_EPAPER */
+//       } else if (button == &button_down) {
+// #if defined(USE_EPAPER)
+//         EPD_Down();
+// #elif defined(USE_TFT)
+//         TFT_Down();
+// #endif /* USE_EPAPER */
       }
       break;
     case AceButton::kEventLongPressed:
@@ -1064,6 +1101,7 @@ void handleEvent(AceButton* button, uint8_t eventType,
       break;
   }
 }
+    }
 
 /* Callbacks for push button interrupt */
 void onModeButtonEvent() {
@@ -1071,20 +1109,21 @@ void onModeButtonEvent() {
 }
 
 void onUpButtonEvent() {
-  button_up.check();
+  // button_up.check();
 }
 
 void onDownButtonEvent() {
-  button_down.check();
+  // button_down.check();
 }
 
 static void ESP32_Button_setup()
 {
-  int mode_button_pin = settings->adapter == ADAPTER_TTGO_T5S ?
-                        SOC_BUTTON_MODE_T5S : SOC_BUTTON_MODE_DEF;
+  // int mode_button_pin = settings->adapter == ADAPTER_TTGO_T5S ?
+  //                       SOC_BUTTON_MODE_T5S : SOC_BUTTON_MODE_DEF;
 
-  // Button(s) uses external pull up resistor.
-  pinMode(mode_button_pin, INPUT);
+  int mode_button_pin = BUTTON_MODE_PIN;
+  // Button(s) uses internal pull up resistor.
+  pinMode(mode_button_pin, INPUT_PULLUP);
 
   button_mode.init(mode_button_pin);
 
@@ -1103,28 +1142,28 @@ static void ESP32_Button_setup()
 
   if (settings->adapter == ADAPTER_TTGO_T5S) {
 
-    // Button(s) uses external pull up resistor.
-    pinMode(SOC_BUTTON_UP_T5S,   INPUT);
-    pinMode(SOC_BUTTON_DOWN_T5S, INPUT);
+    // Button(s) uses internal pull up resistor.
+    // pinMode(SOC_BUTTON_UP_T5S,   INPUT_PULLUP);
+    // pinMode(SOC_BUTTON_DOWN_T5S, INPUT_PULLUP);
 
-    ButtonConfig* UpButtonConfig = button_up.getButtonConfig();
-    UpButtonConfig->setEventHandler(handleEvent);
-    UpButtonConfig->setFeature(ButtonConfig::kFeatureClick);
-    UpButtonConfig->setDebounceDelay(15);
-    UpButtonConfig->setClickDelay(100);
-    UpButtonConfig->setDoubleClickDelay(1000);
-    UpButtonConfig->setLongPressDelay(2000);
+    // ButtonConfig* UpButtonConfig = button_up.getButtonConfig();
+    // UpButtonConfig->setEventHandler(handleEvent);
+    // UpButtonConfig->setFeature(ButtonConfig::kFeatureClick);
+    // UpButtonConfig->setDebounceDelay(15);
+    // UpButtonConfig->setClickDelay(100);
+    // UpButtonConfig->setDoubleClickDelay(1000);
+    // UpButtonConfig->setLongPressDelay(2000);
 
-    ButtonConfig* DownButtonConfig = button_down.getButtonConfig();
-    DownButtonConfig->setEventHandler(handleEvent);
-    DownButtonConfig->setFeature(ButtonConfig::kFeatureClick);
-    DownButtonConfig->setDebounceDelay(15);
-    DownButtonConfig->setClickDelay(100);
-    DownButtonConfig->setDoubleClickDelay(1000);
-    DownButtonConfig->setLongPressDelay(2000);
+    // ButtonConfig* DownButtonConfig = button_down.getButtonConfig();
+    // DownButtonConfig->setEventHandler(handleEvent);
+    // DownButtonConfig->setFeature(ButtonConfig::kFeatureClick);
+    // DownButtonConfig->setDebounceDelay(15);
+    // DownButtonConfig->setClickDelay(100);
+    // DownButtonConfig->setDoubleClickDelay(1000);
+    // DownButtonConfig->setLongPressDelay(2000);
 
-    attachInterrupt(digitalPinToInterrupt(SOC_BUTTON_UP_T5S),   onUpButtonEvent,   CHANGE );
-    attachInterrupt(digitalPinToInterrupt(SOC_BUTTON_DOWN_T5S), onDownButtonEvent, CHANGE );
+    // attachInterrupt(digitalPinToInterrupt(SOC_BUTTON_UP_T5S),   onUpButtonEvent,   CHANGE );
+    // attachInterrupt(digitalPinToInterrupt(SOC_BUTTON_DOWN_T5S), onDownButtonEvent, CHANGE );
   }
 }
 
@@ -1133,8 +1172,8 @@ static void ESP32_Button_loop()
   button_mode.check();
 
   if (settings->adapter == ADAPTER_TTGO_T5S) {
-    button_up.check();
-    button_down.check();
+    // button_up.check();
+    // button_down.check();
   }
 }
 
@@ -1142,6 +1181,7 @@ static void ESP32_Button_fini()
 {
 
 }
+#endif //BUTTONS
 
 static void ESP32_WDT_setup()
 {
@@ -1168,20 +1208,28 @@ const SoC_ops_t ESP32_ops = {
   ESP32_WiFiUDP_stopAll,
   ESP32_Battery_setup,
   ESP32_Battery_voltage,
+#if defined(USE_EPAPER)
   ESP32_EPD_setup,
   ESP32_EPD_fini,
   ESP32_EPD_is_ready,
   ESP32_EPD_update,
+#endif
   ESP32_WiFi_Receive_UDP,
   ESP32_WiFi_Transmit_UDP,
   ESP32_WiFi_clients_count,
+  #if defined(DB)
   ESP32_DB_init,
   ESP32_DB_query,
   ESP32_DB_fini,
+  #endif
+  #if defined(AUDIO)
   ESP32_TTS,
+  #endif
+  #if defined(BUTTONS)
   ESP32_Button_setup,
   ESP32_Button_loop,
   ESP32_Button_fini,
+  #endif /* BUTTONS */
   ESP32_WDT_setup,
   ESP32_WDT_fini,
   &ESP32_Bluetooth_ops

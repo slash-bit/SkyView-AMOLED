@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
+#if defined(USE_EPAPER)
 #include "EPDHelper.h"
 
 #include <Fonts/FreeMonoOblique9pt7b.h>
@@ -533,3 +533,4 @@ void drawStringMaxWidth(int x, int y, unsigned int text_width, String text, alig
 #endif
 
 #endif /* BUILD_SKYVIEW_HD */
+#endif /*USE_EPAPER*/

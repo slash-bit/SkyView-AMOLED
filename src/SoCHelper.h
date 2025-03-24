@@ -39,20 +39,28 @@ typedef struct SoC_ops_struct {
   void (*WiFiUDP_stopAll)();
   void (*Battery_setup)();
   float (*Battery_voltage)();
+#if defined(USE_EPAPER)
   void (*EPD_setup)();
   void (*EPD_fini)();
   bool (*EPD_is_ready)();
   void (*EPD_update)(int);
+#endif
   size_t (*WiFi_Receive_UDP)(uint8_t *, size_t);
   void (*WiFi_Transmit_UDP)(int, byte *, size_t);
   int  (*WiFi_clients_count)();
+  #if defined(DB)
   bool (*DB_init)();
   int  (*DB_query)(uint8_t, uint32_t, char *, size_t, char *, size_t);
   void (*DB_fini)();
+  #endif
+  #if defined(AUDIO)
   void (*TTS)(char *);
+  #endif
+  #if defined(BUTTONS)
   void (*Button_setup)();
   void (*Button_loop)();
   void (*Button_fini)();
+  #endif /* BUTTONS */
   void (*WDT_setup)();
   void (*WDT_fini)();
   Bluetooth_ops_t *Bluetooth;

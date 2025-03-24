@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
+#if defined(USE_EPAPER)
 #ifndef EPDHELPER_H
 #define EPDHELPER_H
 
@@ -227,3 +227,4 @@ static uint8_t sleep_icon_128x128[] PROGMEM = {
 };
 
 #endif /* EPDHELPER_H */
+#endif /* USE_EPAPER */

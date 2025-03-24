@@ -49,6 +49,8 @@
 #include "WebHelper.h"
 #include "BatteryHelper.h"
 #include "GDL90Helper.h"
+#include "TFTHelper.h"
+#include "TouchHelper.h"
 
 #include "SkyView.h"
 // #include "TFTHelper.h"
@@ -87,12 +89,20 @@ void setup()
   Serial.print(F(" FW.REV: " SKYVIEW_FIRMWARE_VERSION " DEV.ID: "));
   Serial.println(String(SoC->getChipId(), HEX));
   Serial.println(F("Copyright (C) 2019-2021 Linar Yusupov. All rights reserved."));
-  Serial.flush();
-
+  // Serial.flush();
+     // Check if PSRAM is available
+  if (psramFound()) {
+  Serial.println("PSRAM is enabled and available!");
+  Serial.printf("Total PSRAM: %d bytes\n", ESP.getPsramSize());
+  Serial.printf("Free PSRAM: %d bytes\n", ESP.getFreePsram());
+  } else {
+  Serial.println("PSRAM is NOT enabled or not available!");
+  }
   EEPROM_setup();
   Battery_setup();
+#if defined(BUTTONS)
   SoC->Button_setup();
-
+#endif /* BUTTONS */
   switch (settings->protocol)
   {
   case PROTOCOL_GDL90:
@@ -111,10 +121,16 @@ void setup()
     SerialInput.flush();
   }
 
+
+#if defined(USE_EPAPER)
   Serial.println();
   Serial.print(F("Intializing E-ink display module (may take up to 10 seconds)... "));
   Serial.flush();
   hw_info.display = EPD_setup(true);
+#elif defined(USE_TFT)
+  TFT_setup();  
+  hw_info.display = DISPLAY_TFT;
+#endif /* USE_EPAPER */
   if (hw_info.display != DISPLAY_NONE) {
     Serial.println(F(" done."));
   } else {
@@ -122,15 +138,20 @@ void setup()
   }
 
   WiFi_setup();
-
+#if defined(DB)
   SoC->DB_init();
-
+#endif
+#if defined(AUDIO)
   char buf[8];
   strcpy(buf,"POST");
   SoC->TTS(buf);
+#endif
 
   Web_setup();
   Traffic_setup();
+#if defined(AMOLED)
+  Touch_setup();
+#endif
 
   SoC->WDT_setup();
 }
@@ -138,24 +159,35 @@ void setup()
 void loop()
 {
   if (SoC->Bluetooth) {
+    bool wdt_status = loopTaskWDTEnabled;
+
+    if (wdt_status) {
+      disableLoopWDT();
+    }
     SoC->Bluetooth->loop();
+
+    if (wdt_status) {
+      enableLoopWDT();
+    }
   }
 
   Input_loop();
 
   Traffic_loop();
-
+#if defined(USE_EPAPER)
   EPD_loop();
-
-  Traffic_ClearExpired();
+#elif defined(USE_TFT)
+  TFT_loop(); 
+#endif /* USE_EPAPER */
+  // Traffic_ClearExpiresd();
 
   WiFi_loop();
 
   // Handle Web
   Web_loop();
-
+#if defined(AUDIO)
   SoC->Button_loop();
-
+#endif /* AUDIO */
   Battery_loop();
 }
 
@@ -175,14 +207,15 @@ void shutdown(const char *msg)
   }
 
   Web_fini();
-
+#if defined(DB)
   SoC->DB_fini();
-
+#endif /* DB */
   WiFi_fini();
-
+#if defined(USE_EPAPER)
   EPD_fini(msg);
-
+#endif /* USE_EPAPER */
+#if defined(BUTTONS)
   SoC->Button_fini();
-
+#endif /* BUTTONS */
   SoC_fini();
 }
