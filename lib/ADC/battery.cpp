@@ -54,9 +54,13 @@ uint16_t read_voltage() {
   // Convert ADC reading to voltage in mV
   uint16_t voltage =
       (uint16_t)esp_adc_cal_raw_to_voltage(adc_reading, adc_characs);
+#if defined(AMOLED)
+      voltage = voltage * 2;
+#endif 
 #ifdef BATT_FACTOR
   voltage *= BATT_FACTOR;
 #endif
   ESP_LOGD(TAG, "Raw: %d / Voltage: %dmV", adc_reading, voltage);
+  Serial.printf("Battery Raw: %d / Voltage: %dmV\r\n", adc_reading, voltage);
   return voltage;
 }

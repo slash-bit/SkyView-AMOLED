@@ -255,6 +255,7 @@ static void TFT_Draw_Radar()
   // draw radar
   sprite.fillSprite(TFT_BLACK);
   sprite.setTextColor(TFT_GREEN, TFT_BLACK);
+  sprite.setTextDatum(MC_DATUM);
   lcd_brightness(255);
   sprite.setTextSize(1);
 
@@ -273,17 +274,17 @@ static void TFT_Draw_Radar()
     switch (EPD_zoom)
     {
       case ZOOM_LOWEST:
-        divider = 10000; /* 20 KM */
+        divider = 9000; /* 9 km 20 KM */
         break;
       case ZOOM_LOW:
-        divider =  5000; /* 10 KM */
+        divider =  6000; /* 6KM was 10 KM */
         break;
       case ZOOM_HIGH:
-        divider =  1000; /*  2 KM */
+        divider =  900; /* 0.9km was 2 KM */
         break;
       case ZOOM_MEDIUM:
       default:
-        divider =  2000;  /* 4 KM */
+        divider =  3000;  /* 3KM was 4 KM */
         break;
     }
   } else {
@@ -821,12 +822,12 @@ void TFT_radar_loop()
 void TFT_radar_zoom()
 {
   if (EPD_zoom < ZOOM_HIGH) EPD_zoom++;
-  sprite2.createSprite(120, 35);
+  sprite2.createSprite(120, 40);
   sprite2.fillSprite(TFT_BLACK);
   sprite2.setTextColor(TFT_ORANGE, TFT_BLACK);
   sprite2.setTextDatum(MC_DATUM);
-  sprite2.drawString("ZOOM IN", 60, 15, 4);
-  sprite2.pushToSprite(&sprite, 173, 166, TFT_BLACK);
+  sprite2.drawString("ZOOM IN", 60, 20, 4);
+  sprite2.pushToSprite(&sprite, 173, 120, TFT_BLACK);
   lcd_PushColors(0, 0, 466, 466, (uint16_t*)sprite.getPointer());
   sprite2.deleteSprite();
   // delay(500);
@@ -836,13 +837,13 @@ void TFT_radar_zoom()
 void TFT_radar_unzoom()
 {
   if (EPD_zoom > ZOOM_LOWEST) EPD_zoom--;
-  sprite2.createSprite(120, 35);
+  sprite2.createSprite(120, 40);
   sprite2.fillSprite(TFT_BLACK);
   sprite2.setTextColor(TFT_ORANGE, TFT_BLACK);
   sprite2.setTextDatum(MC_DATUM);
-  sprite2.drawString("ZOOM OUT", 60, 15, 4);
+  sprite2.drawString("ZOOM OUT", 60, 20, 4);
   
-  sprite2.pushToSprite(&sprite, 173, 300, TFT_BLACK);
+  sprite2.pushToSprite(&sprite, 173, 330, TFT_BLACK);
   lcd_PushColors(0, 0, 466, 466, (uint16_t*)sprite.getPointer());
   // delay(500);
   sprite2.deleteSprite();

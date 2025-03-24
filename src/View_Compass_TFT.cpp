@@ -27,7 +27,7 @@ void TFT_compass_loop() {
         
         compas2Sprite.fillTriangle(215, 125, 235, 90, 255, 125, TFT_WHITE);
         compas2Sprite.setCursor(220, 230, 4);
-        compas2Sprite.printf("%d kmh", (int)(ThisAircraft.GroundSpeed));
+        compas2Sprite.printf("%d kmh", (int)((ThisAircraft.GroundSpeed) * 1.85));
         compas2Sprite.setSwapBytes(true);
         compas2Sprite.pushImage(180, 230, 32, 24, Speed);
         compas2Sprite.setSwapBytes(true);

@@ -69,6 +69,7 @@ typedef struct traffic_by_dist_struct {
   float    climbrate;
   uint16_t lastSeen;
   uint16_t altitude;
+  uint8_t  acftType;
 } traffic_by_dist_t;
 
 #define ALARM_ZONE_NONE         10000  // meters

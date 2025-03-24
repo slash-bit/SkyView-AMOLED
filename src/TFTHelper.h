@@ -69,7 +69,6 @@ typedef struct navbox_struct
 } navbox_t;
 
 
-
 void TFT_setup();
 void TFT_loop();
 void TFT_fini(const char *);

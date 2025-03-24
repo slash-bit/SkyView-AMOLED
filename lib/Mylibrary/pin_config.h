@@ -75,7 +75,8 @@
 // PCF8563
 #define PCF8563_INT 9
 
-#define SLEEP_WAKE_UP_INT GPIO_NUM_0
+#define SLEEP_WAKE_UP_INT GPIO_NUM_5
+#define BUTTON_PIN 5
 
 
 

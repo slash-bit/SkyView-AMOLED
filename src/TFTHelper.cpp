@@ -40,8 +40,14 @@ static int EPD_view_mode = 0;
 //     LCD_SDIO2 /* SDIO2 */, LCD_SDIO3 /* SDIO3 */);
 
 #if defined DO0143FAT01
-Arduino_GFX *gfx = new Arduino_SH8601(bus, LCD_RST /* RST */,
-                                      0 /* rotation */, false /* IPS */, LCD_WIDTH, LCD_HEIGHT);
+// Arduino_GFX *gfx = new Arduino_SH8601(bus, LCD_RST /* RST */,
+//                                       0 /* rotation */, false /* IPS */, LCD_WIDTH, LCD_HEIGHT);
+TFT_eSPI tft = TFT_eSPI();
+TFT_eSprite sprite = TFT_eSprite(&tft);
+TFT_eSprite sprite2 = TFT_eSprite(&tft);
+
+std::shared_ptr<Arduino_IIC_DriveBus> IIC_Bus =
+  std::make_shared<Arduino_HWIIC>(IIC_SDA, IIC_SCL, &Wire);
 #elif defined H0175Y003AM
 TFT_eSPI tft = TFT_eSPI();
 TFT_eSprite sprite = TFT_eSprite(&tft);
@@ -59,6 +65,13 @@ std::shared_ptr<Arduino_IIC_DriveBus> IIC_Bus =
 #endif
 // TFT_eSPI tft = TFT_eSPI();
 // Adafruit_ST7789 tft = Adafruit_ST7789(SOC_GPIO_PIN_SS_TFT, SOC_GPIO_PIN_DC_TFT, SOC_GPIO_PIN_MOSI_TFT, SOC_GPIO_PIN_SCK_TFT, -1);
+buddy_info_t buddies[] = {
+  { 0x201076, "XCT_Vlad" },
+  { 0x86D7FD, "T-Echo" },
+  { 0xE18990, "ESP-Stick" },
+  { 0x46CBDC, "SenseCap" },
+  { 0xFFFFFFFF, NULL } // Sentinel value
+};
 
 unsigned long drawTime = 0;
 void draw_first()
@@ -84,7 +97,7 @@ void draw_first()
   sprite.setTextSize(1);
 
   sprite.drawString("powered by SoftRF",233,286,4);
-  lcd_PushColors(6, 0, 466, 466, (uint16_t*)sprite.getPointer());
+  lcd_PushColors(0, 0, 466, 466, (uint16_t*)sprite.getPointer());
   for (int i = 0; i <= 255; i++)
   {
     lcd_brightness(i);
@@ -174,7 +187,7 @@ void TFT_Mode(boolean next)
           EPD_display_frontpage = false;
       }
     }
-    else if (EPD_view_mode = VIEW_MODE_COMPASS) {
+    else if (EPD_view_mode == VIEW_MODE_COMPASS) {
       if (next) {
         EPD_view_mode = VIEW_MODE_RADAR;
         EPD_display_frontpage = false;

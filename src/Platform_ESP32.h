@@ -120,7 +120,7 @@
 // #define SOC_GPIO_PIN_LED_T5S  2
 #endif
 
-// #define BUTTON_MODE_PIN      5
+#define BUTTON_MODE_PIN      5
 /* Boya Microelectronics Inc. */
 #define BOYA_ID               0x68
 #define BOYA_BY25Q32AL        0x4016
@@ -162,7 +162,6 @@ typedef struct wavProperties_s {
 extern bool loopTaskWDTEnabled;
 
 extern WebServer server;
-
 
 //#define BUILD_SKYVIEW_HD
 

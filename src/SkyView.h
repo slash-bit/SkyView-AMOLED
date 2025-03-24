@@ -54,6 +54,10 @@ typedef struct hardware_info {
 
 } hardware_info_t;
 
+typedef struct buddy_info {
+	uint32_t id;
+	const char*  name;
+} buddy_info_t;
 enum
 {
 	SOFTRF_MODEL_STANDALONE,

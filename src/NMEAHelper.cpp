@@ -140,7 +140,7 @@ static void NMEA_Parse_Character(char c)
         {
 //          Serial.print(F(" GroundSpeed=")); Serial.print(T_GroundSpeed.value());
           fo.GroundSpeed = atoi(T_GroundSpeed.value());
-//          Serial.print(F(" GroundSpeed=")); Serial.println(fo.GroundSpeed);
+        //  Serial.print(F(" GroundSpeed=")); Serial.println(fo.GroundSpeed);
         }
         if (T_ClimbRate.isUpdated())
         {
