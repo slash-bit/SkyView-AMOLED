@@ -80,7 +80,7 @@ const float epd_Target[ICON_TARGETS_POINTS][2] = {{4,4},{0,-6},{-4,4},{-5,-3},{0
 
 #define PG_TARGETS_POINTS 3 // triangle
 const float pg_PointsUp[ICON_TARGETS_POINTS][2] = {{-10,8},{10,8},{0,-9}};
-const float pg_PointsDown[ICON_TARGETS_POINTS][2] = {{-10,8},{10,8},{0,9}};
+const float pg_PointsDown[ICON_TARGETS_POINTS][2] = {{-10,8},{10,8},{0,25}};
 
 #define MAX_DRAW_POINTS 12
 
@@ -532,7 +532,7 @@ static void TFT_Draw_Radar()
           //   break;
           case 7: //Paraglider -  draw target as triangle
               // based on climb/sink rate point triangle up or down
-              if (climb >= 0) {
+              if (climb >= 1) {
                 sprite.fillTriangle(radar_center_x + x + (int)pg_PointsUp[0][0],
                                   radar_center_y - y + (int)pg_PointsUp[0][1],
                                   radar_center_x + x + (int)pg_PointsUp[1][0],
