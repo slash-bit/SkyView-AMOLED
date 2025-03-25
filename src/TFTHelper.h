@@ -16,7 +16,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include <stdint.h>
-#include <driver/display/CO5300.h>
+// #include <driver/display/CO5300.h>
+#include <LilyGo_AMOLED.h>
 #include "Arduino_DriveBus_Library.h"
 #include "TFT_eSPI.h"
 #include <../pins_config.h>

@@ -38,7 +38,7 @@
 #include "SkyView.h"
 
 #include <TFT_eSPI.h> // Include the TFT_eSPI library
-#include <driver/display/CO5300.h>
+// #include <driver/display/CO5300.h>
 #include "helicopter_image.h"
 #include "glider_image.h"
 // #include <Adafruit_GFX.h> // Include the Adafruit_GFX library
@@ -47,6 +47,7 @@
 // extern Adafruit_ST7789 tft;
 //define gfx
 extern TFT_eSPI tft;
+extern LilyGo_Class amoled;
 extern TFT_eSprite sprite;
 extern TFT_eSprite sprite2;
 TFT_eSprite arrowSprite = TFT_eSprite(&tft);
@@ -219,22 +220,22 @@ void TFT_radar_Draw_Message(const char *msg1, const char *msg2)
     sprite.setTextColor(TFT_RED, TFT_BLACK);
 
     if (msg2 == NULL) {
-      sprite.drawString(msg1, LCD_WIDTH / 2, LCD_HEIGHT / 2, 4);
+      sprite.drawString(msg1, LCD_WIDTH / 2, 450 / 2, 4);
     } else {
-      sprite.drawString(msg1, LCD_WIDTH / 2, LCD_HEIGHT / 2 - 66, 4);
-      sprite.drawString(msg2, LCD_WIDTH / 2, LCD_HEIGHT / 2 + 26, 4);
+      sprite.drawString(msg1, LCD_WIDTH / 2, 450 / 2 - 66, 4);
+      sprite.drawString(msg2, LCD_WIDTH / 2, 450 / 2 + 26, 4);
     }
-      lcd_brightness(0);
-      lcd_PushColors(display_column_offset, 0, 466, 466, (uint16_t*)sprite.getPointer());
+      amoled.setBrightness(0);
+      amoled.pushColors(display_column_offset, 0, 450, 450, (uint16_t*)sprite.getPointer());
       for (int i = 0; i <= 255; i++)
       {
-        lcd_brightness(i);
+        amoled.setBrightness(i);
           delay(2);
       }
       delay(200);
       for (int i = 255; i >= 0; i--)
       {
-        lcd_brightness(i);
+        amoled.setBrightness(i);
           delay(2);
       }
   }
@@ -256,11 +257,12 @@ static void TFT_Draw_Radar()
   sprite.fillSprite(TFT_BLACK);
   sprite.setTextColor(TFT_GREEN, TFT_BLACK);
   sprite.setTextDatum(MC_DATUM);
-  lcd_brightness(255);
+  amoled.setBrightness(255);
   sprite.setTextSize(1);
 
   uint16_t radar_x = 0;
-  uint16_t radar_y = (LCD_HEIGHT - LCD_WIDTH) / 2;
+  uint16_t radar_y = 0;
+  // uint16_t radar_y = (LCD_HEIGHT - LCD_WIDTH) / 2;
   uint16_t radar_w = LCD_WIDTH;
 
   uint16_t radar_center_x = radar_w / 2;
@@ -701,11 +703,11 @@ static void TFT_Draw_Radar()
     radar_center_x + 3 * (int) own_Points[0][0],
     radar_center_y + 3 * (int) own_Points[0][1],2,
     TFT_WHITE, TFT_DARKGREY);
-    sprite.setPivot(233, 233);                             
+    sprite.setPivot(225, 225);                             
     ownAcrft.pushRotated(&sprite, ThisAircraft.Track, TFT_BLACK);
 
 #endif //ICON_AIRPLANE
-  lcd_PushColors(6, 0, LCD_WIDTH, LCD_HEIGHT, (uint16_t*)sprite.getPointer()); 
+    amoled.pushColors(0, 0, 450, 450, (uint16_t*)sprite.getPointer()); 
 
     }
 }
@@ -828,7 +830,7 @@ void TFT_radar_zoom()
   sprite2.setTextDatum(MC_DATUM);
   sprite2.drawString("ZOOM IN", 60, 20, 4);
   sprite2.pushToSprite(&sprite, 173, 120, TFT_BLACK);
-  lcd_PushColors(0, 0, 466, 466, (uint16_t*)sprite.getPointer());
+  amoled.pushColors(0, 0, 450, 450, (uint16_t*)sprite.getPointer());
   sprite2.deleteSprite();
   // delay(500);
   sprite2.deleteSprite();
@@ -844,7 +846,7 @@ void TFT_radar_unzoom()
   sprite2.drawString("ZOOM OUT", 60, 20, 4);
   
   sprite2.pushToSprite(&sprite, 173, 330, TFT_BLACK);
-  lcd_PushColors(0, 0, 466, 466, (uint16_t*)sprite.getPointer());
+  amoled.pushColors(0, 0, 450, 450, (uint16_t*)sprite.getPointer());
   // delay(500);
   sprite2.deleteSprite();
 }

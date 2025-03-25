@@ -8,9 +8,9 @@
 // #include <Adafruit_GFX.h>    // Core graphics library
 // #include "Arduino_GFX_Library.h"
 #include "Arduino_DriveBus_Library.h"
-#include "TouchDrvCST92xx.h"
+// #include "TouchDrvCST92xx.h"
 #include <../pins_config.h>
-#include <driver/display/CO5300.h>
+// #include <driver/display/CO5300.h>
 
 // #include <Adafruit_ST7789.h> // Hardware-specific library for ST7789
 // #include <Adafruit_ST77xx.h> // Hardware-specific library for ST7789
@@ -24,7 +24,6 @@ static int TFT_view_mode = 0;
 unsigned long EPDTimeMarker = 0;
 bool EPD_display_frontpage = false;
 
-static int EPD_view_mode = 0;
 
 
 
@@ -56,6 +55,11 @@ TFT_eSprite sprite2 = TFT_eSprite(&tft);
 std::shared_ptr<Arduino_IIC_DriveBus> IIC_Bus =
   std::make_shared<Arduino_HWIIC>(IIC_SDA, IIC_SCL, &Wire);
 
+#elif defined(SQUARE_AMOLED)
+TFT_eSPI tft = TFT_eSPI();
+TFT_eSprite sprite = TFT_eSprite(&tft);
+TFT_eSprite sprite2 = TFT_eSprite(&tft);
+LilyGo_Class amoled;
 
 #else
 #error "Unknown macro definition. Please select the correct macro definition."
@@ -81,7 +85,7 @@ void draw_first()
   sprite.setTextColor(TFT_WHITE, TFT_BLACK);
   sprite.setFreeFont(&FreeMonoBold24pt7b);
   // sprite.setTextSize(2);
-  sprite.drawString("SkyView",233,140,4);
+  sprite.drawString("SkyView",225,140,4);
   Serial.print("SkyView width: ");
   Serial.println(sprite.textWidth("SkyView"));
   Serial.print("SkyView height: ");
@@ -97,10 +101,10 @@ void draw_first()
   sprite.setTextSize(1);
 
   sprite.drawString("powered by SoftRF",233,286,4);
-  lcd_PushColors(0, 0, 466, 466, (uint16_t*)sprite.getPointer());
+  amoled.pushColors(0, 0, 450, 450, (uint16_t*)sprite.getPointer());
   for (int i = 0; i <= 255; i++)
   {
-    lcd_brightness(i);
+    amoled.setBrightness(i);
     delay(3);
   }
   delay(2000);
@@ -108,28 +112,36 @@ void draw_first()
 }
 
 void TFT_setup(void) {
-  pinMode(LCD_EN, OUTPUT);
-  digitalWrite(LCD_EN, HIGH);
-  delay(30);
-  pinMode(SENSOR_RST, OUTPUT);
-  digitalWrite(SENSOR_RST, LOW);
-  delay(30);
-  digitalWrite(SENSOR_RST, HIGH);
-  delay(50);
-  Wire.begin(SENSOR_SDA, SENSOR_SCL);
-  CO5300_init();
+  // pinMode(LCD_EN, OUTPUT);
+  // digitalWrite(LCD_EN, HIGH);
+  // delay(30);
+  // pinMode(SENSOR_RST, OUTPUT);
+  // digitalWrite(SENSOR_RST, LOW);
+  // delay(30);
+  // digitalWrite(SENSOR_RST, HIGH);
+  // delay(50);
+  // Wire.begin(SENSOR_SDA, SENSOR_SCL);
+  // CO5300_init();
+  Serial.println("TFT_setup. AMOLED Init ");
+  bool rslt = false;
+  rslt = amoled.beginAMOLED_241();
+
+  if (!rslt) {
+      while (1) {
+          Serial.println("There is a problem with the device!~"); delay(1000);
+      }
+  }
+  amoled.setRotation(3);
   sprite.setColorDepth(16);
   Serial.print("TFT_setup. PSRAM_ENABLE: ");
   Serial.println(sprite.getAttribute(PSRAM_ENABLE));
   sprite.setAttribute(PSRAM_ENABLE, 1);
-  lcd_setRotation(0); //adjust #define display_column_offset for different rotations
-  lcd_brightness(0); // 0-255    
 
   Serial.printf("Free heap: %d bytes\n", esp_get_free_heap_size());
   Serial.printf("Largest block: %d bytes\n", heap_caps_get_largest_free_block(MALLOC_CAP_8BIT));
-  sprite.createSprite(466, 466);    // full screen landscape sprite in psram
+  sprite.createSprite(450, 450);    // full screen landscape sprite in psram
 
-  if (sprite.createSprite(466, 466) == NULL) {
+  if (sprite.createSprite(450, 450) == NULL) {
     Serial.println("Failed to create sprite. Not enough memory.");
     delay(5000);
   }
@@ -138,13 +150,13 @@ void TFT_setup(void) {
     Serial.println(esp_get_free_heap_size());
   }
 
-  TFT_view_mode = settings->vmode;
+  // TFT_view_mode = settings->vmode;
   draw_first();
-  TFT_radar_setup();
+  // TFT_radar_setup();
 }
 
 void TFT_loop(void) {
-  switch (EPD_view_mode)
+  switch (TFT_view_mode)
   {
   case VIEW_MODE_RADAR:
     TFT_radar_loop();
@@ -167,33 +179,33 @@ void TFT_Mode(boolean next)
 {
   if (hw_info.display == DISPLAY_TFT) {
 
-    if (EPD_view_mode == VIEW_MODE_RADAR) {
+    if (TFT_view_mode == VIEW_MODE_RADAR) {
       if (next) {
-      EPD_view_mode = VIEW_MODE_TEXT;
+      TFT_view_mode = VIEW_MODE_TEXT;
       EPD_display_frontpage = false;
       }
       else {
-        EPD_view_mode = VIEW_MODE_COMPASS;
+        TFT_view_mode = VIEW_MODE_COMPASS;
         EPD_display_frontpage = false;
       }
 
-}   else if (EPD_view_mode == VIEW_MODE_TEXT) {
+}   else if (TFT_view_mode == VIEW_MODE_TEXT) {
         if (next) {
-          EPD_view_mode = VIEW_MODE_COMPASS;
+          TFT_view_mode = VIEW_MODE_COMPASS;
           EPD_display_frontpage = false;
         }
         else {  
-          EPD_view_mode = VIEW_MODE_RADAR;
+          TFT_view_mode = VIEW_MODE_RADAR;
           EPD_display_frontpage = false;
       }
     }
-    else if (EPD_view_mode == VIEW_MODE_COMPASS) {
+    else if (TFT_view_mode == VIEW_MODE_COMPASS) {
       if (next) {
-        EPD_view_mode = VIEW_MODE_RADAR;
+        TFT_view_mode = VIEW_MODE_RADAR;
         EPD_display_frontpage = false;
       }
       else {
-        EPD_view_mode = VIEW_MODE_TEXT; 
+        TFT_view_mode = VIEW_MODE_TEXT; 
         EPD_display_frontpage = false;
     }
   }
@@ -203,7 +215,7 @@ void TFT_Mode(boolean next)
 void TFT_Up()
 {
   if (hw_info.display == DISPLAY_TFT) {
-    switch (EPD_view_mode)
+    switch (TFT_view_mode)
     {
     case VIEW_MODE_RADAR:
       TFT_radar_unzoom();
@@ -220,7 +232,7 @@ void TFT_Up()
 void TFT_Down()
 {
   if (hw_info.display == DISPLAY_TFT) {
-    switch (EPD_view_mode)
+    switch (TFT_view_mode)
     {
     case VIEW_MODE_RADAR:
       TFT_radar_zoom();

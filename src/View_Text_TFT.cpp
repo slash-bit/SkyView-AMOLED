@@ -21,6 +21,7 @@ unsigned long Battery_TimeMarker = 0;
 
 extern uint16_t read_voltage();
 extern TFT_eSPI tft;
+extern LilyGo_Class amoled;
 extern TFT_eSprite sprite;
 TFT_eSprite bearingSprite = TFT_eSprite(&tft);
 TFT_eSprite TextPopSprite = TFT_eSprite(&tft);
@@ -211,8 +212,8 @@ void TFT_draw_text() {
 
     }
   }
-  lcd_brightness(200);
-  lcd_PushColors(6, 0, LCD_WIDTH, LCD_HEIGHT, (uint16_t*)sprite.getPointer());        
+  amoled.setBrightness(200);
+  amoled.pushColors(6, 0, LCD_WIDTH, 450, (uint16_t*)sprite.getPointer());        
   }
   Serial.print("TFT_current: "); Serial.println(TFT_current);
   Serial.print("pages: "); Serial.println(pages);
@@ -238,17 +239,17 @@ void TFT_text_Draw_Message(const char *msg1, const char *msg2)
       sprite.drawString(msg1, LCD_WIDTH / 2, LCD_HEIGHT / 2 - 26, 4);
       sprite.drawString(msg2, LCD_WIDTH / 2, LCD_HEIGHT / 2 + 26, 4);
     }
-      lcd_brightness(0);
-      lcd_PushColors(display_column_offset, 0, 466, 466, (uint16_t*)sprite.getPointer());
+      amoled.setBrightness(0);
+      amoled.pushColors(display_column_offset, 0, 450, 450, (uint16_t*)sprite.getPointer());
       for (int i = 0; i <= 255; i++)
       {
-        lcd_brightness(i);
+        amoled.setBrightness(i);
           delay(2);
       }
       delay(200);
       for (int i = 255; i >= 0; i--)
       {
-        lcd_brightness(i);
+        amoled.setBrightness(i);
           delay(2);
       }
   }
@@ -305,7 +306,7 @@ void TFT_text_next()
 
     
     TextPopSprite.pushToSprite(&sprite, 50, 260, TFT_BLACK);
-    lcd_PushColors(0, 0, 466, 466, (uint16_t*)sprite.getPointer());
+    amoled.pushColors(0, 0, 450, 450, (uint16_t*)sprite.getPointer());
     // delay(500);
     TextPopSprite.deleteSprite();
   }
@@ -328,7 +329,7 @@ void TFT_text_prev()
     TextPopSprite.drawString("NO PREV", 115, 20, 8);
   }
   TextPopSprite.pushToSprite(&sprite, 50, 130, TFT_BLACK);
-  lcd_PushColors(0, 0, 466, 466, (uint16_t*)sprite.getPointer());
+  amoled.pushColors(0, 0, 450, 450, (uint16_t*)sprite.getPointer());
   // delay(500);
   TextPopSprite.deleteSprite();
   

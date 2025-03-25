@@ -47,7 +47,7 @@ void EEPROM_setup()
   if (eeprom_block.field.magic != SKYVIEW_EEPROM_MAGIC) {
     Serial.println(F("WARNING! User defined settings are not initialized yet. Loading defaults..."));
 
-    EEPROM_defaults();
+    // EEPROM_defaults();
   } else {
     Serial.print(F("EEPROM version: "));
     Serial.println(eeprom_block.field.version);
@@ -55,10 +55,14 @@ void EEPROM_setup()
     if (eeprom_block.field.version != SKYVIEW_EEPROM_VERSION) {
       Serial.println(F("WARNING! Version mismatch of user defined settings. Loading defaults..."));
 
-      EEPROM_defaults();
+      // EEPROM_defaults();
     }
   }
   settings = &eeprom_block.field.settings;
+  Serial.println(F("EEPROM settings:"));
+  Serial.println(settings->adapter);
+  Serial.println(settings->connection);
+  Serial.println(settings->bridge);
 }
 
 void EEPROM_defaults()
@@ -67,7 +71,7 @@ void EEPROM_defaults()
   eeprom_block.field.version                  = SKYVIEW_EEPROM_VERSION;
 
   if (SoC->id == SOC_ESP8266)
-    eeprom_block.field.settings.adapter       = ADAPTER_NODEMCU;
+    eeprom_block.field.settings.adapter       = ADAPTER_TTGO_T5S;
   else
 #if defined(BUILD_SKYVIEW_HD)
     eeprom_block.field.settings.adapter       = ADAPTER_TTGO_T5_4_7;
@@ -75,7 +79,7 @@ void EEPROM_defaults()
     eeprom_block.field.settings.adapter       = ADAPTER_TTGO_T5S;
 #endif
 
-  eeprom_block.field.settings.connection      = CON_SERIAL;
+  eeprom_block.field.settings.connection      = CON_BLUETOOTH_LE;
   eeprom_block.field.settings.bridge          = BRIDGE_NONE;
   eeprom_block.field.settings.baudrate        = B38400;
   eeprom_block.field.settings.protocol        = PROTOCOL_NMEA;
@@ -89,7 +93,7 @@ void EEPROM_defaults()
   eeprom_block.field.settings.zoom            = ZOOM_MEDIUM;
   eeprom_block.field.settings.adb             = DB_NONE;
   eeprom_block.field.settings.idpref          = ID_REG;
-  eeprom_block.field.settings.voice           = VOICE_ON;
+  eeprom_block.field.settings.voice           = VOICE_OFF;
   eeprom_block.field.settings.aghost          = ANTI_GHOSTING_OFF;
 
   eeprom_block.field.settings.filter          = TRAFFIC_FILTER_500M;

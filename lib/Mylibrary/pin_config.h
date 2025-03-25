@@ -7,7 +7,7 @@
 #pragma once
 
 // #define DO0143FAT01 //DO0143FMST02//1.43 inches (SH8601 FT3168)
-#define H0175Y003AM //1.75 inches (CO5300 CST9217)
+// #define H0175Y003AM //1.75 inches (CO5300 CST9217)
 // #define DO0143FMST10 //1.43 inches (CO5300 FT3168)
 
 #if defined(DO0143FAT01)
@@ -81,3 +81,21 @@
 
 
 #endif // H0175Y003AM
+#if defined(SQUARE_AMOLED)
+
+#define LCD_WIDTH             450 //physical display horizontal resolution
+#define LCD_HEIGHT            600 //physical display vertical resolution
+
+// TOUCH
+#define I2C_ADDR_FT3168 0x38
+#define TOUCH_INT -1
+#define TOUCH_RST -1
+#define IIC_SDA 47
+#define IIC_SCL 48
+// Battery Voltage ADC
+#define BATTERY_VOLTAGE_ADC_DATA 4
+
+#define SLEEP_WAKE_UP_INT GPIO_NUM_5
+#define BUTTON_PIN 5
+
+#endif

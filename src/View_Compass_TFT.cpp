@@ -8,6 +8,7 @@
 #include "altitude2.h"
 
 extern TFT_eSPI tft;
+extern LilyGo_Class amoled;
 extern TFT_eSprite sprite;
 TFT_eSprite compasSprite = TFT_eSprite(&tft);
 TFT_eSprite compas2Sprite = TFT_eSprite(&tft);
@@ -15,14 +16,14 @@ TFT_eSprite compas2Sprite = TFT_eSprite(&tft);
 
 void TFT_compass_loop() {
     if (isTimeToDisplay()) {
-        compasSprite.createSprite(466, 466);
-        compas2Sprite.createSprite(466, 466);
+        compasSprite.createSprite(450, 450);
+        compas2Sprite.createSprite(450, 450);
         compasSprite.fillSprite(TFT_BLACK);
         sprite.fillSprite(TFT_BLACK);
         compasSprite.setSwapBytes(true);
-        compasSprite.pushImage(0, 0, 466, 466, Compas466x466);
-        compasSprite.setPivot(233, 233);
-        sprite.setPivot(233, 233);
+        compasSprite.pushImage(0, 0, 450, 450, Compas466x466);
+        compasSprite.setPivot(225, 225);
+        sprite.setPivot(225, 225);
         compas2Sprite.fillSprite(TFT_BLACK);
         
         compas2Sprite.fillTriangle(215, 125, 235, 90, 255, 125, TFT_WHITE);
@@ -50,7 +51,7 @@ void TFT_compass_loop() {
         compas2Sprite.setCursor(190, 160, 7);
         compas2Sprite.printf("%d", ThisAircraft.Track, TFT_BLACK);
         compas2Sprite.pushToSprite(&sprite, 0, 0, TFT_BLACK);
-        lcd_PushColors(display_column_offset, 0, 466, 466, (uint16_t*)sprite.getPointer());
+        amoled.pushColors(0, 0, 450, 450, (uint16_t*)sprite.getPointer());
 }
 
 }
