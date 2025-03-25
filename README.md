@@ -1,14 +1,46 @@
-SkyView is a traffic awareness device. It displays air traffic received through EC radio device such as SoftRF  and shows provided FLARM NMEA or Garmin GDL90 data on the screen.
+# SkyView Traffic Awareness Device
 
-It is best suited to operate as a companion device for SoftRF hardware and it helps to visualize nearby traffic in a user friendly manner. It was also reported by builders that it operates with SkyEcho, Stratux and PilotAware as well.
+SkyView is a traffic awareness device designed to display air traffic received through EC radio devices, such as **SoftRF**, and visualize **FLARM NMEA** or **Garmin GDL90** data on its screen.
 
-Data input is accepted over:
+### Key Features:
+- Best suited as a companion device for **SoftRF hardware**, providing user-friendly visualization of nearby traffic.
+- Proven compatibility with **SkyEcho**, **Stratux**, and **PilotAware** devices, as reported by builders.
 
-"classic" serial interface ;
-Wi-Fi UDP connection ;
-Bluetooth SPP ;
-Bluetooth LE
+### Supported Data Input Methods:
+- **Classic Serial Interface**
+- **Wi-Fi UDP Connection**
+- **Bluetooth SPP**
+- **Bluetooth LE**
 
-This is forked repository of SkyView.
-My version is ported to PlatformIO - the tool of choice for building and compiling for various devices and screens.
-This version extensds support for AMOLED colour displays.
+---
+
+### Enhanced Functionality:
+This is a forked repository of SkyView:
+- **Ported to PlatformIO**: A versatile tool for building and compiling firmware for various devices and screens.
+- **Supports AMOLED Colour Displays**: Optimized for vibrant and high-resolution visualizations.
+- **Page Navigation**: Switching between pages is done effortlessly by swiping **left-right** or **up-down**.
+
+---
+
+### Pages and Visualizations:
+
+#### **Radar Page**  
+Displays a dynamic visualization of nearby traffic.
+
+![Radar Page](https://github.com/user-attachments/assets/2dfefb0a-5a87-4afb-b897-b5b04cc7e7e3)
+
+---
+
+#### **Traffic Info Page**  
+Provides detailed information on nearby traffic, including individual aircraft views.
+
+![Traffic Info Overview](https://github.com/user-attachments/assets/dbf50cfd-8fea-4adb-9e6a-514a463d0512)
+
+![Buddy Aircraft View](https://github.com/user-attachments/assets/584c8ca4-b967-43a7-92b8-3858114f6965)
+
+---
+
+#### **Compass Page**  
+A specialized page for orientation and navigation.
+![SkyView_Compas_Page](https://github.com/user-attachments/assets/9613bb03-ed0b-48e4-b963-74c99b9cf339)
+
