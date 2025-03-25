@@ -36,7 +36,7 @@ Provides detailed information on nearby traffic, including individual aircraft v
 
 <img src="https://github.com/user-attachments/assets/dbf50cfd-8fea-4adb-9e6a-514a463d0512" alt="Traffic Info Overview" width="500px">
 
-<img src="https://github.com/user-attachments/assets/584c8ca4-b967-43a7-92b8-3858114f6965" alt="Buddy Aircraft View" width="500px">
+<img src="https://github.com/user-attachments/assets/584c8ca4-b967-43a7-92b8-3858114f6965" alt="Buddy Aircraft View" width="300px">
 
 ---
 
@@ -45,5 +45,7 @@ Provides detailed information on nearby traffic, including individual aircraft v
 
 #### **Compass Page**  
 A specialized page for orientation and navigation.
+
 <img src="https://github.com/user-attachments/assets/9613bb03-ed0b-48e4-b963-74c99b9cf339" alt="Compass Page" width="300px">
 
+---
