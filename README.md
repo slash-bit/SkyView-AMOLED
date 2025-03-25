@@ -27,7 +27,7 @@ This is a forked repository of SkyView:
 #### **Radar Page**  
 Displays a dynamic visualization of nearby traffic.
 
-<img src="https://github.com/user-attachments/assets/2dfefb0a-5a87-4afb-b897-b5b04cc7e7e3" alt="Radar Page" width="500px">
+<img src="https://github.com/user-attachments/assets/2dfefb0a-5a87-4afb-b897-b5b04cc7e7e3" alt="Radar Page" width="300px">
 
 ---
 
@@ -45,5 +45,5 @@ Provides detailed information on nearby traffic, including individual aircraft v
 
 #### **Compass Page**  
 A specialized page for orientation and navigation.
-<img src="https://github.com/user-attachments/assets/9613bb03-ed0b-48e4-b963-74c99b9cf339" alt="Compass Page" width="500px">
+<img src="https://github.com/user-attachments/assets/9613bb03-ed0b-48e4-b963-74c99b9cf339" alt="Compass Page" width="300px">
 
