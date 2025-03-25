@@ -34,9 +34,12 @@ Displays a dynamic visualization of nearby traffic.
 #### **Traffic Info Page**  
 Provides detailed information on nearby traffic, including individual aircraft views.
 
-![Traffic Info Overview](https://github.com/user-attachments/assets/dbf50cfd-8fea-4adb-9e6a-514a463d0512)
+<img src="https://github.com/user-attachments/assets/dbf50cfd-8fea-4adb-9e6a-514a463d0512" alt="Traffic Info Overview" width="500px">
 
-![Buddy Aircraft View](https://github.com/user-attachments/assets/584c8ca4-b967-43a7-92b8-3858114f6965)
+<img src="https://github.com/user-attachments/assets/584c8ca4-b967-43a7-92b8-3858114f6965" alt="Buddy Aircraft View" width="500px">
+
+---
+
 
 ---
 
