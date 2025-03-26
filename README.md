@@ -27,7 +27,7 @@ This is a forked repository of SkyView:
 #### **Radar Page**  
 Displays a dynamic visualization of nearby traffic.
 
-<img src="https://github.com/user-attachments/assets/2dfefb0a-5a87-4afb-b897-b5b04cc7e7e3" alt="Radar Page" width="300px">
+![SkyView_Radar_Page300x300](https://github.com/user-attachments/assets/a582ca45-425f-4d3f-b65a-485dfb4d9953)
 
 ---
 
@@ -36,7 +36,8 @@ Provides detailed information on nearby traffic, including individual aircraft v
 
 <img src="https://github.com/user-attachments/assets/dbf50cfd-8fea-4adb-9e6a-514a463d0512" alt="Traffic Info Overview" width="500px">
 
-<img src="https://github.com/user-attachments/assets/584c8ca4-b967-43a7-92b8-3858114f6965" alt="Buddy Aircraft View" width="300px">
+![Buddy-Aircraft_View300x300](https://github.com/user-attachments/assets/70256d1b-6bc8-48ec-bd24-8c667b0fe275)
+
 
 ---
 
