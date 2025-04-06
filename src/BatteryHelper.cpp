@@ -23,6 +23,8 @@
 #include "SoCHelper.h"
 #include "BatteryHelper.h"
 #include "SkyView.h"
+#include "TFTHelper.h"
+extern LilyGo_Class amoled;
 
 static unsigned long Battery_TimeMarker = 0;
 
@@ -35,6 +37,11 @@ void Battery_setup()
 
   Battery_voltage_cache = SoC->Battery_voltage();
   Battery_TimeMarker = millis();
+  amoled.SY.enableMeasure();
+  amoled.SY.enableCharge();
+  amoled.SY.enableStatLed();
+  amoled.SY.setChargeTargetVoltage(4208);
+  amoled.SY.setChargerConstantCurr(128);
 }
 
 float Battery_voltage()

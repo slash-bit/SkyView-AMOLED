@@ -2,7 +2,7 @@
 #include "TFTHelper.h"
 #include "NMEAHelper.h"
 #include "TrafficHelper.h"
-#include "Compas466x466.h"
+#include "Compas450x450.h"
 #include "SatDish.h"
 #include "Speed.h"
 #include "altitude2.h"
@@ -21,7 +21,7 @@ void TFT_compass_loop() {
         compasSprite.fillSprite(TFT_BLACK);
         sprite.fillSprite(TFT_BLACK);
         compasSprite.setSwapBytes(true);
-        compasSprite.pushImage(0, 0, 450, 450, Compas466x466);
+        compasSprite.pushImage(0, 0, 450, 450, Compas450x450);
         compasSprite.setPivot(225, 225);
         sprite.setPivot(225, 225);
         compas2Sprite.fillSprite(TFT_BLACK);

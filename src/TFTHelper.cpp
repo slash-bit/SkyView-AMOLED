@@ -28,7 +28,7 @@ bool EPD_display_frontpage = false;
 
 
 #if defined(AMOLED)
-
+unsigned long Battery_TimeMarker = millis();
 
 
 
@@ -59,8 +59,15 @@ std::shared_ptr<Arduino_IIC_DriveBus> IIC_Bus =
 TFT_eSPI tft = TFT_eSPI();
 TFT_eSprite sprite = TFT_eSprite(&tft);
 TFT_eSprite sprite2 = TFT_eSprite(&tft);
+TFT_eSprite batterySprite = TFT_eSprite(&tft);
+TFT_eSprite textSprite = TFT_eSprite(&tft);
+TFT_eSprite bottomSprite = TFT_eSprite(&tft);
 LilyGo_Class amoled;
 
+float battery = 4.2;
+uint8_t batteryPercentage = 100;
+uint8_t chargeStatus = 0;
+uint16_t batt_color = TFT_CYAN;
 #else
 #error "Unknown macro definition. Please select the correct macro definition."
 #endif
@@ -70,10 +77,18 @@ LilyGo_Class amoled;
 // TFT_eSPI tft = TFT_eSPI();
 // Adafruit_ST7789 tft = Adafruit_ST7789(SOC_GPIO_PIN_SS_TFT, SOC_GPIO_PIN_DC_TFT, SOC_GPIO_PIN_MOSI_TFT, SOC_GPIO_PIN_SCK_TFT, -1);
 buddy_info_t buddies[] = {
-  { 0x201076, "XCT_Vlad" },
-  { 0x86D7FD, "T-Echo" },
+  /*{ 0x201076, "XCT_Vlad" },
+  { 0x86D7FD, "T-Echo" },*/
   { 0xE18990, "ESP-Stick" },
-  { 0x46CBDC, "SenseCap" },
+  { 0x46CBDC, "Sense CapT1000" },
+  { 0x6254B0, "SenseCap2"},
+  { 0x2006CD, "Tim Pentreath" },
+  { 0x201172, "Steve Wagner"},
+  { 0x201066, "Katrina Wagner"},
+  { 0x20069D, "Steve Wagner"},
+  { 0x2006A8, "Katrina Wagner"},
+  { 0x111F40, "Chris H" },
+  { 0x1116FD, "Tom K" },
   { 0xFFFFFFFF, NULL } // Sentinel value
 };
 
@@ -84,23 +99,18 @@ void draw_first()
   sprite.setTextDatum(MC_DATUM);
   sprite.setTextColor(TFT_WHITE, TFT_BLACK);
   sprite.setFreeFont(&FreeMonoBold24pt7b);
-  // sprite.setTextSize(2);
-  sprite.drawString("SkyView",225,140,4);
-  Serial.print("SkyView width: ");
-  Serial.println(sprite.textWidth("SkyView"));
-  Serial.print("SkyView height: ");
-  Serial.println(sprite.fontHeight(4));
+  sprite.setCursor(40, 140);
+  sprite.printf("SkyView"); // Use %% to print the % character
+  // sprite.drawString("SkyView",225,140,8);
   sprite.setFreeFont(&FreeSansBold12pt7b);
-  Serial.print("powered by... width: ");
-  Serial.println(sprite.textWidth("powered by SoftRF"));
-  Serial.print("powered by ... height: ");
-  Serial.println(sprite.fontHeight(4));
-  sprite.fillRect(114,200,66,66,TFT_RED);
-  sprite.fillRect(200,200,66,66,TFT_GREEN);
-  sprite.fillRect(286,200,66,66,TFT_BLUE); 
-  sprite.setTextSize(1);
 
-  sprite.drawString("powered by SoftRF",233,286,4);
+  // sprite.fillRect(114,200,66,66,TFT_RED);
+  // sprite.fillRect(200,200,66,66,TFT_GREEN);
+  // sprite.fillRect(286,200,66,66,TFT_BLUE); 
+  sprite.setCursor(80, 286);
+  sprite.printf("powered by SoftRF");
+  // sprite.drawString("powered by SoftRF",233,286,6);
+  sprite.setTextSize(1);
   amoled.pushColors(0, 0, 450, 450, (uint16_t*)sprite.getPointer());
   for (int i = 0; i <= 255; i++)
   {
@@ -109,6 +119,39 @@ void draw_first()
   }
   delay(2000);
 
+}
+void battery_draw() {
+  if (millis() - Battery_TimeMarker > 60000) {
+    // disableLoopWDT();
+    // battery = amoled.getBattVoltage() * 0.001;
+    battery = amoled.SY.getBattVoltage() * 0.001;
+    chargeStatus = amoled.SY.chargeStatus(), HEX;
+    // enableLoopWDT();
+    // battery = 3.7;
+
+    if (chargeStatus == 1 || chargeStatus == 2) {
+      batt_color = TFT_PURPLE;
+    } else if (chargeStatus == 0) {
+      if (battery < 3.7 ||  battery > 3.3) {
+        batt_color = TFT_YELLOW;
+      } else if (battery < 3.3) {
+        batt_color = TFT_RED;
+      } else  {
+        batt_color = TFT_CYAN;
+      }
+    }
+    batterySprite.setSwapBytes(1);
+    batterySprite.fillSprite(TFT_BLACK);
+    batterySprite.drawRoundRect(0, 0, 32, 20, 3, batt_color);
+    batterySprite.fillRect(0 + 32, 0 + 7, 2, 7, batt_color);
+    Serial.print(F(" Battery= "));  Serial.println(battery);
+    batteryPercentage = ((battery - 3.3) / (4.2 - 3.3)) * 100.0 > 100.0 ? 100 : (int)((battery - 3.3) / (4.2 - 3.3) * 100.0);
+    Serial.print(F(" Batterypercentage= "));  Serial.println(batteryPercentage);
+    batterySprite.fillRect(0 , 0 + 2, (int)(batteryPercentage / 5) + 5, 14, batt_color);
+    batterySprite.setCursor(0 + 45, 0, 4);
+    batterySprite.printf("%d%%", batteryPercentage); // Use %% to print the % character
+    Battery_TimeMarker = millis();
+  }
 }
 
 void TFT_setup(void) {
@@ -140,6 +183,8 @@ void TFT_setup(void) {
   Serial.printf("Free heap: %d bytes\n", esp_get_free_heap_size());
   Serial.printf("Largest block: %d bytes\n", heap_caps_get_largest_free_block(MALLOC_CAP_8BIT));
   sprite.createSprite(450, 450);    // full screen landscape sprite in psram
+  textSprite.createSprite(450, 450); // full screen landscape sprite in psram
+  batterySprite.createSprite(100, 32);
 
   if (sprite.createSprite(450, 450) == NULL) {
     Serial.println("Failed to create sprite. Not enough memory.");

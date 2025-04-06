@@ -19,7 +19,7 @@
 #ifndef BATTERYHELPER_H
 #define BATTERYHELPER_H
 
-#define isTimeToBattery()         (millis() - Battery_TimeMarker > 5000)
+#define isTimeToBattery()         (millis() - Battery_TimeMarker > 60000)
 
 #define BATTERY_THRESHOLD_NIMHX2  2.3
 #define BATTERY_THRESHOLD_LIPO    3.5

@@ -28,7 +28,7 @@
 #define SENSOR_IRQ  9
 #define SENSOR_RST  8
 
-#define EPD_EXPIRATION_TIME     5 /* seconds */
+#define EPD_EXPIRATION_TIME     60 /* seconds */
 #define TFT_EXPIRATION_TIME     60 /* seconds for Text display*/ 
 
 #define NO_DATA_TEXT            "NO DATA"
@@ -39,7 +39,7 @@
 #define NAVBOX3_TITLE           "SCALE"
 #define NAVBOX4_TITLE           "BAT"
 
-#define isTimeToDisplay()       (millis() - EPDTimeMarker > 2000)
+#define isTimeToDisplay()       (millis() - EPDTimeMarker > 1000)
 #define maxof2(a,b)             (a > b ? a : b)
 
 #define TFT_RADAR_V_THRESHOLD   150      /* metres*/

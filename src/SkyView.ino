@@ -51,6 +51,7 @@
 #include "GDL90Helper.h"
 #include "TFTHelper.h"
 #include "TouchHelper.h"
+#include "JSONHelper.h"
 
 #include "SkyView.h"
 // #include "TFTHelper.h"
@@ -113,9 +114,9 @@ void setup()
   settings->units           = UNITS_METRIC;
   settings->vmode           = VIEW_MODE_RADAR;
   settings->zoom            = ZOOM_MEDIUM;
-  settings->adb             = DB_NONE;
+  settings->adb             = DB_OGN;
   settings->idpref          = ID_REG;
-  settings->voice           = VOICE_OFF;
+  settings->voice           = VOICE_3;
   settings->aghost          = ANTI_GHOSTING_OFF;
   settings->filter          = TRAFFIC_FILTER_500M;
   settings->power_save      = POWER_SAVE_NONE;
@@ -124,7 +125,7 @@ void setup()
   Serial.print("Protocol: "); Serial.println(settings->protocol);
   Serial.print("Connection: "); Serial.println(settings->connection);
   Serial.print("Baudrate: "); Serial.println(settings->baudrate);
-  // Battery_setup();
+  Battery_setup();
 #if defined(BUTTONS)
   SoC->Button_setup();
 #endif /* BUTTONS */
@@ -178,6 +179,9 @@ void setup()
 #if defined(AMOLED)
   Touch_setup();
 #endif
+#if defined(LABELS)
+  labels_setup();
+#endif
 
   SoC->WDT_setup();
 }
@@ -211,7 +215,7 @@ void loop()
 
   // Handle Web
   Web_loop();
-#if defined(AUDIO)
+#if defined(BUTTON)
   SoC->Button_loop();
 #endif /* AUDIO */
   // Battery_loop();

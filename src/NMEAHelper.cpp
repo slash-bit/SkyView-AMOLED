@@ -152,7 +152,16 @@ static void NMEA_Parse_Character(char c)
         if (T_AcftType.isUpdated())
         {
         //  Serial.print(F(" AcftType=")); Serial.print(T_AcftType.value());
-          fo.AcftType = strtol(T_AcftType.value(), NULL, 16);
+          // fo.AcftType = strtol(T_AcftType.value(), NULL, 16);
+          long parsedValue = strtol(T_AcftType.value(), NULL, 16);
+
+          // Ensure the value fits within the range of int8_t
+          if (parsedValue >= -128 && parsedValue <= 127) {
+            fo.AcftType = (int8_t)parsedValue; // Safe casting
+          } else {
+              Serial.println("Invalid AcftType value, setting default.");
+              fo.AcftType = -1; // Assign a default or error value
+          }
           // Serial.print(F(" AcftType=")); Serial.println(fo.AcftType);
         }
 

@@ -41,6 +41,9 @@
 // #include <driver/display/CO5300.h>
 #include "helicopter_image.h"
 #include "glider_image.h"
+#include "GA.h"
+#include "aircrafts.h"
+#include "aircraft_small.h"
 // #include <Adafruit_GFX.h> // Include the Adafruit_GFX library
 // #include <Adafruit_ST7789.h> // Include the Adafruit ST7789 library
 
@@ -52,9 +55,15 @@ extern TFT_eSprite sprite;
 extern TFT_eSprite sprite2;
 TFT_eSprite arrowSprite = TFT_eSprite(&tft);
 TFT_eSprite ownAcrft = TFT_eSprite(&tft);
+TFT_eSprite pg = TFT_eSprite(&tft);
+TFT_eSprite pgSprite = TFT_eSprite(&tft);
+TFT_eSprite gaSprite = TFT_eSprite(&tft);
 TFT_eSprite Acrft = TFT_eSprite(&tft);
 TFT_eSprite helicopterSprite = TFT_eSprite(&tft);
 TFT_eSprite gliderSprite = TFT_eSprite(&tft);
+extern TFT_eSprite bottomSprite;
+extern TFT_eSprite batterySprite;
+TFT_eSprite aircraft = TFT_eSprite(&tft);
 
 static navbox_t navbox1;
 static navbox_t navbox2;
@@ -78,12 +87,16 @@ const float own_Points[ICON_ARROW_POINTS][2] = {{-6,5},{0,-6},{6,5},{0,2}};
 #endif //ICON_AIRPLANE
 #define ICON_TARGETS_POINTS 5
 const float epd_Target[ICON_TARGETS_POINTS][2] = {{4,4},{0,-6},{-4,4},{-5,-3},{0,2}};
+const int8_t pg_Points[ICON_ARROW_POINTS][2] = {{-12,14},{0,-16},{12,14},{0,4}};
 
 #define PG_TARGETS_POINTS 3 // triangle
 const float pg_PointsUp[ICON_TARGETS_POINTS][2] = {{-10,8},{10,8},{0,-9}};
 const float pg_PointsDown[ICON_TARGETS_POINTS][2] = {{-10,8},{10,8},{0,25}};
 
 #define MAX_DRAW_POINTS 12
+
+uint8_t sprite_center_x = 18;
+uint8_t sprite_center_y = 18;
 
 // 2D rotation
 void EPD_2D_Rotate(float &tX, float &tY, float tCos, float tSin)
@@ -218,6 +231,11 @@ void TFT_radar_Draw_Message(const char *msg1, const char *msg2)
     sprite.setTextDatum(MC_DATUM);
     sprite.fillSprite(TFT_BLACK);
     sprite.setTextColor(TFT_RED, TFT_BLACK);
+      //Battery indicator
+    battery_draw();
+    uint16_t battery_x = 310;
+    uint16_t battery_y = 5;
+    batterySprite.pushToSprite(&sprite, battery_x, battery_y, TFT_BLACK);
 
     if (msg2 == NULL) {
       sprite.drawString(msg1, LCD_WIDTH / 2, 450 / 2, 4);
@@ -393,7 +411,7 @@ static void TFT_Draw_Radar()
     float trSin = sin_approx(-ThisAircraft.Track);
     float trCos = cos_approx(-ThisAircraft.Track);    
     for (int i=0; i < MAX_TRACKING_OBJECTS; i++) {
-      if (Container[i].ID && (now() - Container[i].timestamp) <= EPD_EXPIRATION_TIME && Container[i].ID != settings->team) {
+      if (Container[i].ID && (now() - Container[i].timestamp) <= TFT_EXPIRATION_TIME && Container[i].ID != settings->team) {
 
         float rel_x;
         float rel_y;
@@ -492,12 +510,14 @@ static void TFT_Draw_Radar()
         } else {
           color = TFT_RED;
         }
+        Serial.print(F(" AcftType="));  Serial.println(Container[i].AcftType);
         switch (Container[i].AcftType)
         {
           case 1: //Glider
                   //Container[i].alarm_level
               gliderSprite.createSprite(70, 62);
               gliderSprite.fillSprite(TFT_BLACK);
+              gliderSprite.setSwapBytes(true);
               gliderSprite.pushImage(0, 0, 70, 62, glider);
               gliderSprite.setPivot(35, 31);
               sprite.setPivot(radar_center_x + x, radar_center_y - y);
@@ -506,62 +526,62 @@ static void TFT_Draw_Radar()
             break;
 
           case 3:    //helicopter
-          helicopterSprite.createSprite(48, 64);
-          helicopterSprite.fillSprite(TFT_BLACK);
-          helicopterSprite.pushImage(0, 0, 48, 64, helicopter);  
-          helicopterSprite.setPivot(24, 32);
-          sprite.setPivot(radar_center_x + x, radar_center_y - y);
-      
-          helicopterSprite.pushRotated(&sprite, Container[i].Track, TFT_BLACK);
-            // sprite.fillTriangle(radar_center_x + x + scale * ((int)epd_Points[0][0]),
-            //                     radar_center_y - y + scale * ((int)epd_Points[0][1]),
-            //                     radar_center_x + x + scale * ((int)epd_Points[1][0]),
-            //                     radar_center_y - y + scale * ((int)epd_Points[1][1]),
-            //                     radar_center_x + x + scale * ((int)epd_Points[4][0]),
-            //                     radar_center_y - y + scale * ((int)epd_Points[4][1]),
-            //                     color);
-            // sprite.fillTriangle(radar_center_x + x + scale * ((int)epd_Points[2][0]),
-            //                     radar_center_y - y + scale * ((int)epd_Points[2][1]),
-            //                     radar_center_x + x + scale * ((int)epd_Points[1][0]),
-            //                     radar_center_y - y + scale * ((int)epd_Points[1][1]),
-            //                     radar_center_x + x + scale * ((int)epd_Points[4][0]),
-            //                     radar_center_y - y + scale * ((int)epd_Points[4][1]),
-            //                     color);
+            helicopterSprite.createSprite(48, 64);
+            helicopterSprite.fillSprite(TFT_BLACK);
+            helicopterSprite.setSwapBytes(true);
+            helicopterSprite.pushImage(0, 0, 48, 64, helicopter);  
+            helicopterSprite.setPivot(24, 32);
+            sprite.setPivot(radar_center_x + x, radar_center_y - y);
+        
+            helicopterSprite.pushRotated(&sprite, Container[i].Track, TFT_BLACK);
+
             break;
           // case 6: //hang glider
 
 
           //   break;
           case 7: //Paraglider -  draw target as triangle
-              // based on climb/sink rate point triangle up or down
-              if (climb >= 1) {
-                sprite.fillTriangle(radar_center_x + x + (int)pg_PointsUp[0][0],
-                                  radar_center_y - y + (int)pg_PointsUp[0][1],
-                                  radar_center_x + x + (int)pg_PointsUp[1][0],
-                                  radar_center_y - y + (int)pg_PointsUp[1][1],
-                                  radar_center_x + x + (int)pg_PointsUp[2][0],
-                                  radar_center_y - y + (int)pg_PointsUp[2][1],
-                                  color);
-                if (isTeam) {
-                  sprite.drawSmoothCircle(radar_center_x + x,
-                    radar_center_y - y,
-                    14, TFT_LIGHTGREY, TFT_BLACK);
-                }
-              } else {
-                sprite.fillTriangle(radar_center_x + (int)pg_PointsDown[0][0],
-                                  radar_center_y - y + (int)pg_PointsDown[0][1],
-                                  radar_center_x + x + (int)pg_PointsDown[1][0],
-                                  radar_center_y - y + (int)pg_PointsDown[1][1],
-                                  radar_center_x + x + (int)pg_PointsDown[2][0],
-                                  radar_center_y - y + (int)pg_PointsDown[2][1],
-                                  color);
-                if (isTeam) {
-                  sprite.drawSmoothCircle(radar_center_x + x,
-                    radar_center_y - y,
-                    14, TFT_LIGHTGREY, TFT_BLACK);
-                }
-              }
-              break;    
+            pgSprite.setSwapBytes(1);
+            pgSprite.fillSprite(TFT_BLACK);
+            pgSprite.setPivot(18, 18);
+
+            pgSprite.drawWideLine(sprite_center_x + (int8_t) pg_Points[0][0],
+            sprite_center_y + (int8_t) pg_Points[0][1],
+            sprite_center_x + (int8_t) pg_Points[1][0],
+            sprite_center_y + (int8_t) pg_Points[1][1],2,
+            TFT_GREEN, TFT_BLACK);
+            pgSprite.drawWideLine(sprite_center_x + (int8_t) pg_Points[1][0],
+            sprite_center_y + (int8_t) pg_Points[1][1],
+            sprite_center_x + (int8_t) pg_Points[2][0],
+            sprite_center_y + (int8_t) pg_Points[2][1],2,
+            TFT_GREEN, TFT_BLACK);
+            pgSprite.drawWideLine(sprite_center_x + (int8_t) pg_Points[2][0],
+            sprite_center_y + (int8_t) pg_Points[2][1],
+            sprite_center_x + (int8_t) pg_Points[3][0],
+            sprite_center_y + (int8_t) pg_Points[3][1],2,
+            TFT_GREEN, TFT_BLACK);
+            pgSprite.drawWideLine(sprite_center_x + (int8_t) pg_Points[3][0],
+            sprite_center_y + (int8_t) pg_Points[3][1],
+            sprite_center_x + (int8_t) pg_Points[0][0],
+            sprite_center_y + (int8_t) pg_Points[0][1],2,
+            color, TFT_BLACK);
+            if (isTeam) {
+              pgSprite.drawSmoothCircle(sprite_center_x,
+                sprite_center_y,
+                14, TFT_LIGHTGREY, TFT_BLACK);
+            }
+            sprite.setPivot(radar_center_x + x, radar_center_y - y);
+            pgSprite.pushRotated(&sprite, Container[i].Track, TFT_BLACK);
+            break;
+            case 9: //Aircraft
+            aircraft.createSprite(60, 48);
+            aircraft.setSwapBytes(1);
+            aircraft.fillSprite(TFT_BLACK);
+            aircraft.pushImage(0, 0, 60, 48, aircraft_small);
+            aircraft.setPivot(30, 24);
+            sprite.setPivot(radar_center_x + x, radar_center_y - y);
+            aircraft.pushRotated(&sprite, Container[i].Track, TFT_BLACK);
+            break;
           case 11: //Baloon
             sprite.fillSmoothCircle(radar_center_x + x,
                           radar_center_y - y,
@@ -572,17 +592,17 @@ static void TFT_Draw_Radar()
                             4, TFT_BLACK);
             break;
           default:
-              sprite.fillSmoothCircle(radar_center_x + x,
-                radar_center_y - y,
-                  18, TFT_YELLOW);
-                  sprite.fillRect(radar_center_x + x - 17, radar_center_y - y - 1, 34, 4, TFT_BLACK);
-                  sprite.fillCircle(radar_center_x + x,
-                  radar_center_y - y + 2,
-                  4, TFT_BLACK);
+            Serial.print(F("Unexpected AcftType value: "));
+            Serial.println(Container[i].AcftType);
+            gaSprite.fillSprite(TFT_BLACK);
+            gaSprite.setSwapBytes(true);
+            gaSprite.pushImage(0, 0, 70, 70, GA);
+            gaSprite.setPivot(35, 35);
+            sprite.setPivot(radar_center_x + x, radar_center_y - y);
+            gaSprite.pushRotated(&sprite, Container[i].Track, TFT_BLACK);
 
             break;
         }
-
       }
     }
 
@@ -707,8 +727,33 @@ static void TFT_Draw_Radar()
     ownAcrft.pushRotated(&sprite, ThisAircraft.Track, TFT_BLACK);
 
 #endif //ICON_AIRPLANE
+    bottomSprite.createSprite(450, 150);
+    bottomSprite.fillSprite(TFT_BLACK);
+    bottomSprite.setSwapBytes(true);
+    if (Container[0].ID) {
+      // bottomSprite.setFreeFont(&Orbitron_Light_24);
+      bottomSprite.setCursor(0, 75, 7);
+      bottomSprite.printf("%.1f     %.0f     %.1f", 
+        Container[0].distance / 1000.0,
+        Container[0].RelativeVertical,
+        Container[0].ClimbRate);
+        bottomSprite.setCursor(5, 25, 4);
+        bottomSprite.printf("ID: %02X%02X%02X  %s",
+          (Container[0].ID >> 16) & 0xFF, 
+          (Container[0].ID >> 8) & 0xFF, 
+          (Container[0].ID & 0xFF),
+          (Container[0].AcftType == 9 ? "Aircraft" : Container[0].AcftType == 7 ? "Paraglider" : Container[0].AcftType == 1 ? "Glider" : "GA"));
+        bottomSprite.drawString("km", 85, 95, 4);
+        bottomSprite.drawString("m", 235, 95, 4);
+        bottomSprite.drawString("m/s", 415, 95, 4);
+}
+    bottomSprite.setSwapBytes(true);
+    bottomSprite.pushImage(370, 20, 32, 32, aircrafts);
+    bottomSprite.drawNumber(Traffic_Count(), 420, 15, 6);
     amoled.pushColors(0, 0, 450, 450, (uint16_t*)sprite.getPointer()); 
-
+    amoled.pushColors(0, 450, 450, 150, (uint16_t*)bottomSprite.getPointer());
+    bottomSprite.deleteSprite();
+    
     }
 }
 

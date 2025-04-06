@@ -15,7 +15,39 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+#include <ArduinoJson.h>
+#include <SPIFFS.h>
+#include <FS.h>
+#if defined(LABELS)
+StaticJsonDocument<512> doc;
+JsonArray labelsArray;
 
+void labels_setup() {
+  if (!SPIFFS.begin(true)) {
+    Serial.println("[Error] Failed to mount SPIFFS");
+    return;
+  }
+  File labels = SPIFFS.open("/labels.json", "r");
+  if (!labels) {
+      Serial.println("[Error] Failed to open file");
+      return;
+  }
+  // Read the JSON content into a buffer
+  DeserializationError error = deserializeJson(doc, labels);
+  labels.close();
+
+  if (error) {
+    Serial.print("Failed to parse JSON: ");
+    Serial.println(error.c_str());
+    return;
+  }
+   // Extract and log the JSON array
+  labelsArray = doc.as<JsonArray>();
+  Serial.println("[Info] Successfully loaded labels.json");
+  Serial.print("Labels Array size: "); Serial.println(labelsArray.size());
+ 
+}
+#endif
 #if defined(RASPBERRY_PI)
 
 #include <ArduinoJson.h>

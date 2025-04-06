@@ -20,12 +20,16 @@
 #define JSONHELPER_H
 
 #include <ArduinoJson.h>
+#include <SPIFFS.h>
 #include "SkyView.h"
 
 #define JSON_BUFFER_SIZE  65536
 
-extern StaticJsonBuffer<JSON_BUFFER_SIZE> jsonBuffer;
+extern JsonDocument jsonBuffer;
+
+// extern StaticJsonBuffer<JSON_BUFFER_SIZE> jsonBuffer;
 
 extern void parseSettings(JsonObject&);
+void labels_setup();
 
 #endif /* JSONHELPER_H */

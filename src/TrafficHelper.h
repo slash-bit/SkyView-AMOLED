@@ -79,7 +79,7 @@ typedef struct traffic_by_dist_struct {
 
 /* alarm levels are defined in NMEAHelper.h */
 
-#define ENTRY_EXPIRATION_TIME   5 /* seconds */
+#define ENTRY_EXPIRATION_TIME   15 /* seconds */
 #define TRAFFIC_VECTOR_UPDATE_INTERVAL 2 /* seconds */
 #define TRAFFIC_UPDATE_INTERVAL_MS (TRAFFIC_VECTOR_UPDATE_INTERVAL * 1000)
 #define isTimeToUpdateTraffic() (millis() - UpdateTrafficTimeMarker > \
@@ -105,6 +105,7 @@ void Traffic_ClearExpired (void);
 int  Traffic_Count        (void);
 
 int  traffic_cmp_by_distance(const void *, const void *);
+void battery_draw();
 
 extern traffic_t ThisAircraft, Container[MAX_TRACKING_OBJECTS], fo, EmptyFO;
 extern traffic_by_dist_t traffic[MAX_TRACKING_OBJECTS];

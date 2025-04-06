@@ -32,6 +32,7 @@
 #include "EEPROMHelper.h"
 #include "WiFiHelper.h"
 #include "BluetoothHelper.h"
+#include <LilyGo_AMOLED.h>
 
 #include "SkyView.h"
 
@@ -49,6 +50,7 @@
 #define TIME_TO_SLEEP  28        /* Time ESP32 will go to sleep (in seconds) */
 
 WebServer server ( 80 );
+extern LilyGo_Class amoled;
 
 #if defined(USE_EPAPER)
 /*
@@ -118,12 +120,14 @@ static union {
   uint8_t efuse_mac[6];
   uint64_t chipmacid;
 };
-#if defined(SOUND)
 static uint8_t sdcard_files_to_open = 0;
-
-SPIClass uSD_SPI(HSPI);
-
 uCDB<SDFileSystemClass, SDFile> ucdb(SD);
+#if defined(AUDIO)
+
+
+// SPIClass uSD_SPI(HSPI);
+
+// uCDB<SDFileSystemClass, SDFile> ucdb(SD);
 
 /* variables hold file, state of process wav file and wav file properties */
 wavProperties_t wavProps;
@@ -147,7 +151,7 @@ i2s_pin_config_t pin_config = {
     .data_out_num = SOC_GPIO_PIN_DOUT,
     .data_in_num  = -1  // Not used
 };
-#endif /* SOUND*/
+#endif /* AUDIO*/
 
 // RTC_DATA_ATTR int bootCount = 0;
 
@@ -354,14 +358,22 @@ static void ESP32_Battery_setup()
 #endif
 }
 
-static float ESP32_Battery_voltage()
+float ESP32_Battery_voltage()
 {
+#if defined(AMOLED)
+  yield();
+  float voltage = amoled.getBattVoltage() * 0.001;
+  return voltage;
+
+#else
   float voltage = ((float) read_voltage()) * 0.001 ;
 
   /* T5 has voltage divider 100k/100k on board */
   return (settings->adapter == ADAPTER_TTGO_T5S    ||
           settings->adapter == ADAPTER_TTGO_T5_4_7 ?
           2 * voltage : voltage);
+  
+#endif
 }
 
 // #include <SoftSPI.h>
@@ -587,7 +599,7 @@ static int ESP32_WiFi_clients_count()
     return -1; /* error */
   }
 }
-#if !defined(BUILD_SKYVIEW_HD) && !defined(ESP32S3)
+#if !defined(BUILD_SKYVIEW_HD) && !defined(ESP32S3) || defined(DB)
 static bool SD_is_ok = false;
 static bool ADB_is_open = false;
 
@@ -606,8 +618,16 @@ static bool ESP32_DB_init()
   sdcard_files_to_open += (settings->adb   == DB_ICAO   ? 1 : 0);
   sdcard_files_to_open += (settings->voice != VOICE_OFF ? 2 : 0);   // we use voice1 & voice3
 
-  if (!SD.begin(SOC_SD_PIN_SS_T5S, uSD_SPI, 4000000, "/sd", sdcard_files_to_open)) {
+  if (amoled.installSD())
+  {
+    Serial.println(F("SD card mounted"));
+  }
+  else
+  {
     Serial.println(F("ERROR: Failed to mount microSD card."));
+  }
+  /*(!SD.begin(SOC_SD_PIN_SS_T5S, uSD_SPI, 4000000, "/sd", sdcard_files_to_open))*/ {
+   
     return rval;
   }
 
@@ -988,7 +1008,7 @@ static void ESP32_TTS(char *message)
           strcat(filename, WAV_FILE_SUFFIX);
           // voice_3 in the existing collection of .wav files is quieter than voice_1,
           // so make it a bit louder since we use it for more-urgent advisories
-          int volume = (settings->voice == VOICE_3)? 1 : 0;
+          int volume = (settings->voice == VOICE_3)? -1 : -1;
           play_file(filename, volume);
           word = strtok (NULL, " ");
 
@@ -1019,7 +1039,7 @@ static void ESP32_TTS(char *message)
       strcpy(filename, WAV_FILE_PREFIX);
       strcat(filename, "POST");
       strcat(filename, WAV_FILE_SUFFIX);
-      play_file(filename, 0);
+      play_file(filename, -1);
 
       /* demonstrate the voice output */
       delay(1500);
@@ -1028,14 +1048,14 @@ static void ESP32_TTS(char *message)
       strcat(filename, VOICE1_SUBDIR);
       strcat(filename, "notice");
       strcat(filename, WAV_FILE_SUFFIX);
-      play_file(filename, 0);
+      play_file(filename, -1); // make voice1 6dB quieter
       delay(1500);
       settings->voice = VOICE_3;
       strcpy(filename, WAV_FILE_PREFIX);
       strcat(filename, VOICE3_SUBDIR);
       strcat(filename, "notice");
       strcat(filename, WAV_FILE_SUFFIX);
-      play_file(filename, 1);   // make voice3 6dB louder
+      play_file(filename, -1);   // make voice3 6dB louder
       delay(1000);
     }
 }

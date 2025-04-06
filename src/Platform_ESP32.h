@@ -121,6 +121,10 @@
 #endif
 
 #define BUTTON_MODE_PIN      5
+/* D4 S3 I2S-out pins mapping */
+#define SOC_GPIO_PIN_BCLK     41
+#define SOC_GPIO_PIN_LRCLK    42
+#define SOC_GPIO_PIN_DOUT     40
 /* Boya Microelectronics Inc. */
 #define BOYA_ID               0x68
 #define BOYA_BY25Q32AL        0x4016
@@ -158,6 +162,8 @@ typedef struct wavProperties_s {
     uint16_t blockAlign;
     uint16_t bitsPerSample;
 } wavProperties_t;
+
+float ESP32_Battery_voltage();
 
 extern bool loopTaskWDTEnabled;
 
