@@ -99,6 +99,31 @@ void setup()
   Serial.println("PSRAM is NOT enabled or not available!");
   }
   EEPROM_setup();
+  if (settings == NULL || SoC == NULL || SoC->Bluetooth == NULL) {
+    Serial.println("Error: Null pointer detected!");
+    return;
+  }
+  //temporary settings
+  settings->adapter       = ADAPTER_TTGO_T5S;
+  settings->connection      = CON_BLUETOOTH_LE;
+  settings->bridge          = BRIDGE_NONE;
+  settings->baudrate        = B38400;
+  settings->protocol        = PROTOCOL_NMEA;
+  settings->orientation     = DIRECTION_NORTH_UP;
+  settings->units           = UNITS_METRIC;
+  settings->vmode           = VIEW_MODE_RADAR;
+  settings->zoom            = ZOOM_MEDIUM;
+  settings->adb             = DB_NONE;
+  settings->idpref          = ID_REG;
+  settings->voice           = VOICE_OFF;
+  settings->aghost          = ANTI_GHOSTING_OFF;
+  settings->filter          = TRAFFIC_FILTER_500M;
+  settings->power_save      = POWER_SAVE_WIFI;
+  settings->team            = 0x46BCDC;
+
+  Serial.print("Protocol: "); Serial.println(settings->protocol);
+  Serial.print("Connection: "); Serial.println(settings->connection);
+  Serial.print("Baudrate: "); Serial.println(settings->baudrate);
   Battery_setup();
 #if defined(BUTTONS)
   SoC->Button_setup();
@@ -179,7 +204,7 @@ void loop()
 #elif defined(USE_TFT)
   TFT_loop(); 
 #endif /* USE_EPAPER */
-  // Traffic_ClearExpiresd();
+  Traffic_ClearExpired();
 
   WiFi_loop();
 

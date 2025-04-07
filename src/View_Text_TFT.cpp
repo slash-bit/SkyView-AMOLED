@@ -194,11 +194,12 @@ void TFT_draw_text() {
   sprite.drawRoundRect(battery_x, battery_y, 32, 20, 3, TFT_CYAN);
   sprite.fillRect(battery_x + 32, battery_y + 7, 2, 7, TFT_CYAN);
   
-  if (isTimeToBattery()) {
+  if  (millis() - Battery_TimeMarker > 60000) {
     battery = read_voltage();
     Serial.print(F(" Battery= "));  Serial.println(battery);
-    batteryPercentage = ((battery - 3300) / (4200 - 3300)) * 100.0;
+    batteryPercentage = (int)((battery - 3300) / (4200 - 3300)) * 100.0;
     Serial.print(F(" Batterypercentage= "));  Serial.println(batteryPercentage);
+    Battery_TimeMarker = millis();
   }
   sprite.fillRect(battery_x , battery_y + 2, (int)(batteryPercentage / 5) + 5, 14, TFT_CYAN);
   sprite.setCursor(battery_x, battery_y + 24, 4);
@@ -211,7 +212,7 @@ void TFT_draw_text() {
 
     }
   }
-  lcd_brightness(200);
+  lcd_brightness(225);
   lcd_PushColors(6, 0, LCD_WIDTH, LCD_HEIGHT, (uint16_t*)sprite.getPointer());        
   }
   Serial.print("TFT_current: "); Serial.println(TFT_current);
@@ -300,12 +301,12 @@ void TFT_text_next()
     TextPopSprite.fillSprite(TFT_BLACK);
     TextPopSprite.setTextColor(TFT_ORANGE, TFT_BLACK);
     TextPopSprite.setTextDatum(MC_DATUM);
-    TextPopSprite.setCursor(115, 20, 8);
-    TextPopSprite.printf("NEXT");
+    TextPopSprite.setSwapBytes(true);
+    TextPopSprite.drawString("NEXT", 115, 20, 4);
 
     
     TextPopSprite.pushToSprite(&sprite, 50, 260, TFT_BLACK);
-    lcd_PushColors(0, 0, 466, 466, (uint16_t*)sprite.getPointer());
+    lcd_PushColors(6, 0, 466, 466, (uint16_t*)sprite.getPointer());
     // delay(500);
     TextPopSprite.deleteSprite();
   }
@@ -318,17 +319,18 @@ void TFT_text_prev()
   TextPopSprite.fillSprite(TFT_BLACK);
   TextPopSprite.setTextColor(TFT_ORANGE, TFT_BLACK);
   TextPopSprite.setTextDatum(MC_DATUM);
+  TextPopSprite.setSwapBytes(true);
 
   if (TFT_current > 1) {
     TFT_current--;
     Serial.print("TFT_current: ");
     Serial.println(TFT_current);
-    TextPopSprite.drawString("PREV", 115, 20, 8);
+    TextPopSprite.drawString("PREV", 115, 20, 4);
   } else {
-    TextPopSprite.drawString("NO PREV", 115, 20, 8);
+    TextPopSprite.drawString("NO PREV", 115, 20, 4);
   }
   TextPopSprite.pushToSprite(&sprite, 50, 130, TFT_BLACK);
-  lcd_PushColors(0, 0, 466, 466, (uint16_t*)sprite.getPointer());
+  lcd_PushColors(6, 0, 466, 466, (uint16_t*)sprite.getPointer());
   // delay(500);
   TextPopSprite.deleteSprite();
   
