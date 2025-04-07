@@ -47,7 +47,7 @@ void EEPROM_setup()
   if (eeprom_block.field.magic != SKYVIEW_EEPROM_MAGIC) {
     Serial.println(F("WARNING! User defined settings are not initialized yet. Loading defaults..."));
 
-    EEPROM_defaults();
+    // EEPROM_defaults();
   } else {
     Serial.print(F("EEPROM version: "));
     Serial.println(eeprom_block.field.version);
@@ -55,7 +55,7 @@ void EEPROM_setup()
     if (eeprom_block.field.version != SKYVIEW_EEPROM_VERSION) {
       Serial.println(F("WARNING! Version mismatch of user defined settings. Loading defaults..."));
 
-      EEPROM_defaults();
+      // EEPROM_defaults();
     }
   }
   settings = &eeprom_block.field.settings;

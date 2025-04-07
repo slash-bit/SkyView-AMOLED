@@ -41,7 +41,7 @@
 #define isTimeToDisplay()       (millis() - EPDTimeMarker > 2000)
 #define maxof2(a,b)             (a > b ? a : b)
 
-#define TFT_RADAR_V_THRESHOLD   2      /* metres set temporary*/
+#define TFT_RADAR_V_THRESHOLD   150      /* metres*/
 #define TEAM_EXPIRATION_TIME    120      /* seconds */
 
 #define TEXT_VIEW_LINE_LENGTH   13      /* characters */
