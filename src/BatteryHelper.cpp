@@ -41,7 +41,7 @@ void Battery_setup()
   amoled.SY.enableCharge();
   amoled.SY.enableStatLed();
   amoled.SY.setChargeTargetVoltage(4208);
-  amoled.SY.setChargerConstantCurr(128);
+  amoled.SY.setChargerConstantCurr(192);
 }
 
 float Battery_voltage()

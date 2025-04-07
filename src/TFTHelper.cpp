@@ -125,14 +125,12 @@ void battery_draw() {
     // disableLoopWDT();
     // battery = amoled.getBattVoltage() * 0.001;
     battery = amoled.SY.getBattVoltage() * 0.001;
-    chargeStatus = amoled.SY.chargeStatus(), HEX;
+    chargeStatus = amoled.SY.chargeStatus();
     // enableLoopWDT();
     // battery = 3.7;
 
-    if (chargeStatus == 1 || chargeStatus == 2) {
-      batt_color = TFT_PURPLE;
-    } else if (chargeStatus == 0) {
-      if (battery < 3.7 ||  battery > 3.3) {
+    if (chargeStatus == 0) {
+      if (battery < 3.7 &&  battery > 3.3) {
         batt_color = TFT_YELLOW;
       } else if (battery < 3.3) {
         batt_color = TFT_RED;
@@ -142,13 +140,17 @@ void battery_draw() {
     }
     batterySprite.setSwapBytes(1);
     batterySprite.fillSprite(TFT_BLACK);
-    batterySprite.drawRoundRect(0, 0, 32, 20, 3, batt_color);
-    batterySprite.fillRect(0 + 32, 0 + 7, 2, 7, batt_color);
+    batterySprite.drawRoundRect(0, 0, 44, 20, 3, batt_color);
+    batterySprite.fillRect(0 + 44, 0 + 4, 6, 10, batt_color);
     Serial.print(F(" Battery= "));  Serial.println(battery);
     batteryPercentage = ((battery - 3.3) / (4.2 - 3.3)) * 100.0 > 100.0 ? 100 : (int)((battery - 3.3) / (4.2 - 3.3) * 100.0);
     Serial.print(F(" Batterypercentage= "));  Serial.println(batteryPercentage);
-    batterySprite.fillRect(0 , 0 + 2, (int)(batteryPercentage / 5) + 5, 14, batt_color);
-    batterySprite.setCursor(0 + 45, 0, 4);
+    batterySprite.fillRect(0 + 2, 0 + 3, (int)(batteryPercentage / 5) + 20, 14, batt_color);
+    if (chargeStatus == 1 || chargeStatus == 2) { //draw charging icon  
+      batterySprite.fillTriangle(15, 14, 26, 14, 26, 0, TFT_WHITE);
+      batterySprite.fillTriangle(17, 10, 17, 20, 29, 10, TFT_WHITE);
+    }
+    batterySprite.setCursor(0 + 52, 0, 4);
     batterySprite.printf("%d%%", batteryPercentage); // Use %% to print the % character
     Battery_TimeMarker = millis();
   }

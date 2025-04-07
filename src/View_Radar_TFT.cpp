@@ -233,7 +233,7 @@ void TFT_radar_Draw_Message(const char *msg1, const char *msg2)
     sprite.setTextColor(TFT_RED, TFT_BLACK);
       //Battery indicator
     battery_draw();
-    uint16_t battery_x = 310;
+    uint16_t battery_x = 300;
     uint16_t battery_y = 5;
     batterySprite.pushToSprite(&sprite, battery_x, battery_y, TFT_BLACK);
 
