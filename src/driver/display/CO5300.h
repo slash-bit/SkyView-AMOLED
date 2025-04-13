@@ -55,3 +55,4 @@ void lcd_display_set_colour_enhance_low_byte(uint8_t ce_low_byte);
 void lcd_display_set_colour_enhance_high_byte(uint8_t ce_high_byte);      
 void lcd_display_high_brightness_mode_on(uint8_t hb_en=0b00000110); 
 void lcd_display_high_brightness_mode_off(uint8_t hb_en=0b00000100); 
+void lcd_polling_end();

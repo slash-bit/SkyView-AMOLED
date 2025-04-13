@@ -18,6 +18,7 @@ unsigned long Battery_TimeMarker = 0;
 #include "Speed.h"
 #include "altitude2.h"
 #include "aircrafts.h"
+#include "settings.h"
 
 extern uint16_t read_voltage();
 extern TFT_eSPI tft;
@@ -31,12 +32,12 @@ uint8_t pages =0;
 uint32_t battery = 0;
 uint8_t batteryPercentage = 0;
 uint16_t lock_x = 110;
-uint16_t lock_y = 345;
+uint16_t lock_y = 380;
 bool     isLocked = true;
 uint16_t lock_color = TFT_GREEN;
 uint8_t lock_open = 0;
 extern buddy_info_t buddies[];
-const char* buddy_name = "Unknown";
+const char* buddy_name = " ";
 int   disp_alt, vertical;
 
 
@@ -68,7 +69,7 @@ void TFT_draw_text() {
     pages = j;
     // snprintf(id2_text, sizeof(id_text), "%02X%02X%02X", (traffic[TFT_current - 1].fop->ID >> 16) & 0xFF, (traffic[TFT_current - 1].fop->ID >> 8) & 0xFF, (traffic[TFT_current - 1].fop->ID) & 0xFF);      // Extract low byte
     snprintf(id2_text, sizeof(id2_text), "ID: %02X%02X%02X", (traffic[TFT_current - 1].fop->ID >> 16) & 0xFF, (traffic[TFT_current - 1].fop->ID >> 8) & 0xFF, (traffic[TFT_current - 1].fop->ID) & 0xFF);      // Extract low byte
-    }
+
     if (TFT_current > j) {
       TFT_current = j;
     
@@ -81,8 +82,13 @@ void TFT_draw_text() {
     for (size_t i = 0; buddies[i].id != 0xFFFFFFFF; i++) {
       if (buddies[i].id == traffic[TFT_current - 1].fop->ID) {
           buddy_name = buddies[i].name;
-          printf("ID: 0x%06X, Name: %s\n", buddies[i].id, buddies[i].name);
+          Serial.printf("ID: 0x%06X, Name: %s\n", buddies[i].id, buddies[i].name);
+          break;
       }
+      else {
+          buddy_name = "Unknown";
+      }
+    }
     // int oclock = ((bearing + 15) % 360) / 30;
     vertical = (int) traffic[TFT_current - 1].fop->RelativeVertical;
     int disp_alt = (int)((vertical + ThisAircraft.altitude) * 3);  //converting meter to feet
@@ -104,8 +110,6 @@ void TFT_draw_text() {
     Serial.print(F(" Altitude= "));  Serial.println(traffic[TFT_current - 1].altitude);
     Serial.print(F(" ClimbRate= "));  Serial.println(traffic[TFT_current - 1].climbrate);
     Serial.print(F(" Distance= "));  Serial.println(traffic[TFT_current - 1].fop->distance);
-    Serial.print(F(" Speed= "));  Serial.println(speed);
-    Serial.print(F(" lastSeen= "));  Serial.println(traffic[TFT_current - 1].lastSeen);
     
 
 #endif
@@ -113,11 +117,13 @@ void TFT_draw_text() {
   sprite.fillSprite(TFT_BLACK);
   sprite.setTextColor(TFT_WHITE, TFT_BLACK);
 
-  sprite.drawString(traffic[TFT_current - 1].acftType == 7 ? "PG" : traffic[TFT_current - 1].acftType == 1 ? "G" : traffic[TFT_current - 1].acftType == 3 ? "H" : "GA", 87, 93, 4);
+  sprite.drawString(traffic[TFT_current - 1].acftType == 7 ? "PG" : traffic[TFT_current - 1].acftType == 1 ? "G" : traffic[TFT_current - 1].acftType == 3 ? "H" : traffic[TFT_current - 1].acftType == 9 ? "A" : "GA", 87, 93, 4);
   sprite.drawSmoothRoundRect(84, 82, 6, 5, 40, 40, TFT_WHITE);
-  
-  sprite.drawString(buddy_name, 140, 58, 4);
-  sprite.drawString(id2_text, 140, 93, 4);
+
+  sprite.drawString(id2_text, 140, 58, 4);
+  sprite. setFreeFont(&Orbitron_Light_24);
+  sprite.setCursor(140, 110);
+  sprite.printf(buddy_name);
   sprite.setCursor(140,123,4);
   sprite.printf("Last seen: %ds ago", traffic[TFT_current - 1].lastSeen);
 
@@ -148,12 +154,12 @@ void TFT_draw_text() {
   sprite.drawFloat((traffic[TFT_current - 1].fop->distance / 1000.0), 1, 170, 285, 7);
   sprite.drawString("km", 250, 285, 4);
     
-  sprite.setSwapBytes(true);
-  sprite.pushImage(300, 300, 32, 24, Speed);
-  sprite.drawFloat(speed, 0, 340, 300, 6);
-  sprite.drawString("km", 400, 300, 4); //speed km
-  sprite.drawString("h", 400, 325, 4);  //speed h
-  sprite.drawWideLine(400, 322, 420, 322, 3, TFT_WHITE);
+  // sprite.setSwapBytes(true);
+  // sprite.pushImage(300, 300, 32, 24, Speed);
+  // sprite.drawFloat(speed, 0, 340, 300, 6);
+  // sprite.drawString("km", 400, 300, 4); //speed km
+  // sprite.drawString("h", 400, 325, 4);  //speed h
+  // sprite.drawWideLine(400, 322, 420, 322, 3, TFT_WHITE);
 
   if (vertical > 55) {
     sprite.drawSmoothArc(233, 233, 230, 225, 90, vertical > 3000 ? 150 : (90 + vertical / 50), vertical > 500 ? TFT_CYAN : TFT_RED, TFT_BLACK, true);
@@ -173,8 +179,8 @@ void TFT_draw_text() {
     sprite.drawSmoothArc(233, 233, 230, 225, 270 - abs(traffic_vario) * 12, 270, traffic_vario > 3.5 ? TFT_RED : traffic_vario > 2 ? TFT_ORANGE : TFT_YELLOW, TFT_BLACK, true);
   }
   // Lock page
-  sprite.drawSmoothRoundRect(lock_x, lock_y, 6, 4, 30, 30, lock_color, TFT_BLACK);
-  sprite.drawArc(lock_x + lock_open + 15, lock_y, 12, 10, 90, 270, lock_color, TFT_BLACK);
+  sprite.drawSmoothRoundRect(lock_x, lock_y, 6, 4, 20, 20, lock_color, TFT_BLACK);
+  sprite.drawArc(lock_x + lock_open + 15, lock_y, 8, 6, 90, 270, lock_color, TFT_BLACK);
   sprite.setSwapBytes(true);
   sprite.pushImage(190, 370, 32, 32, aircrafts);
   sprite.drawNumber(Traffic_Count(), 240, 365, 6);
@@ -212,13 +218,17 @@ void TFT_draw_text() {
 
     }
   }
-  lcd_brightness(225);
-  lcd_PushColors(6, 0, LCD_WIDTH, LCD_HEIGHT, (uint16_t*)sprite.getPointer());        
-  }
-  Serial.print("TFT_current: "); Serial.println(TFT_current);
-  Serial.print("pages: "); Serial.println(pages);
-}
+  //draw settings icon
+    sprite.setSwapBytes(true);
+    sprite.pushImage(320, 360, 36, 36, settings_icon_small);
 
+    lcd_brightness(225);
+    lcd_PushColors(6, 0, LCD_WIDTH, LCD_HEIGHT, (uint16_t*)sprite.getPointer());   
+    Serial.print("TFT_current: "); Serial.println(TFT_current);
+    Serial.print("pages: "); Serial.println(pages);     
+    }
+
+}
 void TFT_text_Draw_Message(const char *msg1, const char *msg2)
 {
     // int16_t  tbx, tby;
@@ -239,8 +249,11 @@ void TFT_text_Draw_Message(const char *msg1, const char *msg2)
       sprite.drawString(msg1, LCD_WIDTH / 2, LCD_HEIGHT / 2 - 26, 4);
       sprite.drawString(msg2, LCD_WIDTH / 2, LCD_HEIGHT / 2 + 26, 4);
     }
-      lcd_brightness(0);
-      lcd_PushColors(display_column_offset, 0, 466, 466, (uint16_t*)sprite.getPointer());
+    //draw settings icon
+    sprite.setSwapBytes(true);
+    sprite.pushImage(320, 360, 36, 36, settings_icon_small);
+    lcd_brightness(0);
+    lcd_PushColors(display_column_offset, 0, 466, 466, (uint16_t*)sprite.getPointer());
       for (int i = 0; i <= 255; i++)
       {
         lcd_brightness(i);
@@ -282,7 +295,7 @@ void TFT_text_loop()
       TFT_text_Draw_Message(NO_DATA_TEXT, NULL);
     }
 
-    EPDTimeMarker = millis();
+    TFTTimeMarker = millis();
   }
 }
 

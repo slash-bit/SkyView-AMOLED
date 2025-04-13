@@ -156,39 +156,16 @@ static uint32_t ESP32_getFlashId()
   return g_rom_flashchip.device_id;
 }
 
-static void ESP32_fini()
+void ESP32_fini()
 {
-#if defined(BUTTON)
-  int mode_button_pin = SOC_BUTTON_MODE_DEF;
-
-  if (settings && (settings->adapter == ADAPTER_TTGO_T5S)) {
-    uSD_SPI.end();
-
-    mode_button_pin = SOC_BUTTON_MODE_T5S;
-  }
-#endif /* BUTTON */
   esp_wifi_stop();
   esp_bt_controller_disable();
   SPI.end();
-
-  /*
-   * manually apply this fix onto Arduino Core for ESP32:
-   * https://github.com/espressif/arduino-esp32/pull/4272
-   * to put SD card into idle state
-   *
-   *  SkyView EZ sleep current (from 3.7V battery source):
-   *  ---------------------------------------------------
-   *  SD card in  -            0.2 mA
-   *  SD card out -            0.1 mA
-   */
-#if defined(ESP32S3)
-esp_sleep_enable_ext1_wakeup(1ULL << SLEEP_WAKE_UP_INT, ESP_EXT1_WAKEUP_ANY_LOW);
-#else
-  esp_sleep_enable_ext1_wakeup(1ULL << mode_button_pin, ESP_EXT1_WAKEUP_ALL_LOW);
-#endif
-//  Serial.println("Going to sleep now");
-//  Serial.flush();
-
+  Serial.println("Putting device to deep sleep...");
+  lcd_sleep();
+  gpio_hold_en(GPIO_NUM_0);
+  esp_sleep_enable_ext0_wakeup(SLEEP_WAKE_UP_INT, LOW);
+  SPI.end();
   esp_deep_sleep_start();
 }
 

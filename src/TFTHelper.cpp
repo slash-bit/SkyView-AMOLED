@@ -11,6 +11,7 @@
 #include "TouchDrvCST92xx.h"
 #include <../pins_config.h>
 #include <driver/display/CO5300.h>
+#include "power.h"
 
 // #include <Adafruit_ST7789.h> // Hardware-specific library for ST7789
 // #include <Adafruit_ST77xx.h> // Hardware-specific library for ST7789
@@ -20,11 +21,11 @@
 
 
 #include "SkyView.h"
-static int TFT_view_mode = 0;
-unsigned long EPDTimeMarker = 0;
+int TFT_view_mode = 0;
+unsigned long TFTTimeMarker = 0;
 bool EPD_display_frontpage = false;
 
-static int EPD_view_mode = 0;
+int prev_TFT_view_mode = 0;
 
 
 
@@ -87,9 +88,10 @@ void draw_first()
   sprite.fillSprite(TFT_BLACK);
   sprite.setTextDatum(MC_DATUM);
   sprite.setTextColor(TFT_WHITE, TFT_BLACK);
-  sprite.setFreeFont(&FreeMonoBold24pt7b);
+  sprite.setFreeFont(&Orbitron_Light_32);
+  sprite.setCursor(144, 160);
   // sprite.setTextSize(2);
-  sprite.drawString("SkyView",233,140,4);
+  sprite.printf("SkyView");
   Serial.print("SkyView width: ");
   Serial.println(sprite.textWidth("SkyView"));
   Serial.print("SkyView height: ");
@@ -104,7 +106,7 @@ void draw_first()
   sprite.fillRect(286,200,66,66,TFT_BLUE); 
   sprite.setTextSize(1);
 
-  sprite.drawString("powered by SoftRF",233,286,4);
+  sprite.drawString("powered by SoftRF",233,293,4);
   lcd_PushColors(6, 0, 466, 466, (uint16_t*)sprite.getPointer());
   for (int i = 0; i <= 255; i++)
   {
@@ -187,7 +189,7 @@ void TFT_setup(void) {
 }
 
 void TFT_loop(void) {
-  switch (EPD_view_mode)
+  switch (TFT_view_mode)
   {
   case VIEW_MODE_RADAR:
     TFT_radar_loop();
@@ -210,37 +212,44 @@ void TFT_Mode(boolean next)
 {
   if (hw_info.display == DISPLAY_TFT) {
 
-    if (EPD_view_mode == VIEW_MODE_RADAR) {
+    if (TFT_view_mode == VIEW_MODE_RADAR) {
       if (next) {
-      EPD_view_mode = VIEW_MODE_TEXT;
+      TFT_view_mode = VIEW_MODE_TEXT;
       EPD_display_frontpage = false;
       }
       else {
-        EPD_view_mode = VIEW_MODE_COMPASS;
+        TFT_view_mode = VIEW_MODE_COMPASS;
         EPD_display_frontpage = false;
       }
 
-}   else if (EPD_view_mode == VIEW_MODE_TEXT) {
+}   else if (TFT_view_mode == VIEW_MODE_TEXT) {
         if (next) {
-          EPD_view_mode = VIEW_MODE_COMPASS;
+          TFT_view_mode = VIEW_MODE_COMPASS;
           EPD_display_frontpage = false;
         }
         else {  
-          EPD_view_mode = VIEW_MODE_RADAR;
+          TFT_view_mode = VIEW_MODE_RADAR;
           EPD_display_frontpage = false;
       }
     }
-    else if (EPD_view_mode == VIEW_MODE_COMPASS) {
+    else if (TFT_view_mode == VIEW_MODE_COMPASS) {
       if (next) {
-        EPD_view_mode = VIEW_MODE_RADAR;
+        TFT_view_mode = VIEW_MODE_RADAR;
         EPD_display_frontpage = false;
       }
       else {
-        EPD_view_mode = VIEW_MODE_TEXT; 
+        TFT_view_mode = VIEW_MODE_TEXT; 
         EPD_display_frontpage = false;
     }
   }
-}
+    else if (TFT_view_mode == VIEW_MODE_SETTINGS) {
+      if (next) {
+        TFT_view_mode = prev_TFT_view_mode;
+        EPD_display_frontpage = false;
+      }
+
+    }
+  }
 }
 
 void TFT_Up()
@@ -275,5 +284,23 @@ void TFT_Down()
       break;
     }
   }
+}
+
+void settings_page() {
+  // lcd_polling_end();
+  delay(50);
+  prev_TFT_view_mode = TFT_view_mode;
+  TFT_view_mode = VIEW_MODE_SETTINGS;
+  sprite.fillSprite(TFT_BLACK);
+  sprite.setTextColor(TFT_WHITE, TFT_BLACK);
+  sprite.setTextDatum(MC_DATUM);
+  sprite.drawString("Settings", LCD_WIDTH / 2, 80, 4);
+  sprite.drawString("Sleep", 233, 360, 4);
+  sprite.drawString("BACK", LCD_WIDTH / 2 - 100, LCD_HEIGHT / 2 + 180, 4);
+  sprite.setSwapBytes(true);
+  sprite.pushImage(320, 330, 48, 47, power_button_small);
+  
+  lcd_PushColors(display_column_offset, 0, 466, 466, (uint16_t*)sprite.getPointer());
+  lcd_brightness(255);
 }
 #endif /* USE_TFT */

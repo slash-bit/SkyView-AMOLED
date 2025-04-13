@@ -294,3 +294,7 @@ void lcd_display_high_brightness_mode_off(uint8_t hbm_en)
 {
   lcd_send_cmd(0xB0, &hbm_en, 0x01);
 }
+void lcd_polling_end() 
+{
+    spi_device_polling_end(spi, portMAX_DELAY);
+}

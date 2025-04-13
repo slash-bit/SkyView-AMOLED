@@ -104,7 +104,7 @@ void setup()
     return;
   }
   //temporary settings
-  settings->adapter       = ADAPTER_TTGO_T5S;
+ /* settings->adapter       = ADAPTER_TTGO_T5S;
   settings->connection      = CON_BLUETOOTH_LE;
   settings->bridge          = BRIDGE_NONE;
   settings->baudrate        = B38400;
@@ -120,7 +120,7 @@ void setup()
   settings->filter          = TRAFFIC_FILTER_500M;
   settings->power_save      = POWER_SAVE_WIFI;
   settings->team            = 0x46BCDC;
-
+*/
   Serial.print("Protocol: "); Serial.println(settings->protocol);
   Serial.print("Connection: "); Serial.println(settings->connection);
   Serial.print("Baudrate: "); Serial.println(settings->baudrate);
