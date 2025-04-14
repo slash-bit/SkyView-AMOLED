@@ -20,7 +20,8 @@ unsigned long Battery_TimeMarker = 0;
 #include "aircrafts.h"
 #include "settings.h"
 
-extern uint16_t read_voltage();
+extern xSemaphoreHandle spiMutex;
+// extern uint16_t read_voltage();
 extern TFT_eSPI tft;
 extern TFT_eSprite sprite;
 TFT_eSprite bearingSprite = TFT_eSprite(&tft);
@@ -201,7 +202,7 @@ void TFT_draw_text() {
   sprite.fillRect(battery_x + 32, battery_y + 7, 2, 7, TFT_CYAN);
   
   if  (millis() - Battery_TimeMarker > 60000) {
-    battery = read_voltage();
+    battery = Battery_voltage();
     Serial.print(F(" Battery= "));  Serial.println(battery);
     batteryPercentage = (int)((battery - 3300) / (4200 - 3300)) * 100.0;
     Serial.print(F(" Batterypercentage= "));  Serial.println(batteryPercentage);
@@ -221,9 +222,13 @@ void TFT_draw_text() {
   //draw settings icon
     sprite.setSwapBytes(true);
     sprite.pushImage(320, 360, 36, 36, settings_icon_small);
-
-    lcd_brightness(225);
-    lcd_PushColors(6, 0, LCD_WIDTH, LCD_HEIGHT, (uint16_t*)sprite.getPointer());   
+    if (xSemaphoreTake(spiMutex, portMAX_DELAY)) {
+      lcd_brightness(225);
+      lcd_PushColors(6, 0, 466, 466, (uint16_t*)sprite.getPointer());
+      xSemaphoreGive(spiMutex);
+    } else {
+      Serial.println("Failed to acquire SPI semaphore!");
+    }
     Serial.print("TFT_current: "); Serial.println(TFT_current);
     Serial.print("pages: "); Serial.println(pages);     
     }
@@ -252,19 +257,25 @@ void TFT_text_Draw_Message(const char *msg1, const char *msg2)
     //draw settings icon
     sprite.setSwapBytes(true);
     sprite.pushImage(320, 360, 36, 36, settings_icon_small);
-    lcd_brightness(0);
-    lcd_PushColors(display_column_offset, 0, 466, 466, (uint16_t*)sprite.getPointer());
-      for (int i = 0; i <= 255; i++)
-      {
-        lcd_brightness(i);
-          delay(2);
-      }
-      delay(200);
-      for (int i = 255; i >= 0; i--)
-      {
-        lcd_brightness(i);
-          delay(2);
-      }
+    if (xSemaphoreTake(spiMutex, portMAX_DELAY)) {
+      lcd_brightness(0);
+      lcd_PushColors(display_column_offset, 0, 466, 466, (uint16_t*)sprite.getPointer());
+        for (int i = 0; i <= 255; i++)
+        {
+          lcd_brightness(i);
+            delay(2);
+        }
+        delay(200);
+        for (int i = 255; i >= 0; i--)
+        {
+          lcd_brightness(i);
+            delay(2);
+        }
+      xSemaphoreGive(spiMutex);
+  } else {
+      Serial.println("Failed to acquire SPI semaphore!");
+  }
+
   }
 }
 
@@ -319,7 +330,13 @@ void TFT_text_next()
 
     
     TextPopSprite.pushToSprite(&sprite, 50, 260, TFT_BLACK);
-    lcd_PushColors(6, 0, 466, 466, (uint16_t*)sprite.getPointer());
+    if (xSemaphoreTake(spiMutex, portMAX_DELAY)) {
+      lcd_PushColors(6, 0, 466, 466, (uint16_t*)sprite.getPointer());
+      xSemaphoreGive(spiMutex);
+    } else {
+      Serial.println("Failed to acquire SPI semaphore!");
+    }
+    
     // delay(500);
     TextPopSprite.deleteSprite();
   }
@@ -343,7 +360,12 @@ void TFT_text_prev()
     TextPopSprite.drawString("NO PREV", 115, 20, 4);
   }
   TextPopSprite.pushToSprite(&sprite, 50, 130, TFT_BLACK);
-  lcd_PushColors(6, 0, 466, 466, (uint16_t*)sprite.getPointer());
+  if (xSemaphoreTake(spiMutex, portMAX_DELAY)) {
+    lcd_PushColors(6, 0, 466, 466, (uint16_t*)sprite.getPointer());
+    xSemaphoreGive(spiMutex);
+  } else {
+    Serial.println("Failed to acquire SPI semaphore!");
+  }
   // delay(500);
   TextPopSprite.deleteSprite();
   

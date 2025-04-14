@@ -50,6 +50,7 @@
 
 // extern Adafruit_ST7789 tft;
 //define gfx
+extern xSemaphoreHandle spiMutex;
 extern TFT_eSPI tft;
 extern TFT_eSprite sprite;
 extern TFT_eSprite sprite2;
@@ -248,19 +249,25 @@ void TFT_radar_Draw_Message(const char *msg1, const char *msg2)
       //draw settings icon
     sprite.setSwapBytes(true);
     sprite.pushImage(320, 360, 36, 36, settings_icon_small);
-    lcd_brightness(0);
-    lcd_PushColors(display_column_offset, 0, 466, 466, (uint16_t*)sprite.getPointer());
-      for (int i = 0; i <= 255; i++)
-      {
-        lcd_brightness(i);
-          delay(2);
-      }
-      delay(200);
-      for (int i = 255; i >= 0; i--)
-      {
-        lcd_brightness(i);
-          delay(2);
-      }
+    if (xSemaphoreTake(spiMutex, portMAX_DELAY)) {
+      lcd_brightness(0);
+      lcd_PushColors(display_column_offset, 0, 466, 466, (uint16_t*)sprite.getPointer());
+        for (int i = 0; i <= 255; i++)
+        {
+          lcd_brightness(i);
+            delay(2);
+        }
+        delay(200);
+        for (int i = 255; i >= 0; i--)
+        {
+          lcd_brightness(i);
+            delay(2);
+        }
+      xSemaphoreGive(spiMutex);
+  } else {
+      Serial.println("Failed to acquire SPI semaphore!");
+  }
+
   }
 }
 
@@ -722,7 +729,13 @@ static void TFT_Draw_Radar()
     ownAcrft.pushRotated(&sprite, ThisAircraft.Track, TFT_BLACK);
 
 #endif //ICON_AIRPLANE
-  lcd_PushColors(6, 0, LCD_WIDTH, LCD_HEIGHT, (uint16_t*)sprite.getPointer()); 
+  if (xSemaphoreTake(spiMutex, portMAX_DELAY)) {
+    lcd_PushColors(6, 0, LCD_WIDTH, LCD_HEIGHT, (uint16_t*)sprite.getPointer()); 
+    xSemaphoreGive(spiMutex);
+  } else {
+    Serial.println("Failed to acquire SPI semaphore!");
+  }
+  
 
     }
 }
@@ -846,9 +859,13 @@ void TFT_radar_zoom()
   sprite2.setSwapBytes(true);
   sprite2.drawString("ZOOM IN", 60, 20, 4);
   sprite2.pushToSprite(&sprite, 173, 120, TFT_BLACK);
-  lcd_PushColors(6, 0, 466, 466, (uint16_t*)sprite.getPointer());
-  sprite2.deleteSprite();
-  // delay(500);
+  if (xSemaphoreTake(spiMutex, portMAX_DELAY)) {
+    lcd_PushColors(6, 0, 466, 466, (uint16_t*)sprite.getPointer());
+    xSemaphoreGive(spiMutex);
+  } else {
+    Serial.println("Failed to acquire SPI semaphore!");
+  }
+  
   sprite2.deleteSprite();
 }
 
@@ -863,7 +880,12 @@ void TFT_radar_unzoom()
   sprite2.drawString("ZOOM OUT", 60, 20, 4);
   
   sprite2.pushToSprite(&sprite, 173, 330, TFT_BLACK);
-  lcd_PushColors(6, 0, 466, 466, (uint16_t*)sprite.getPointer());
+  if (xSemaphoreTake(spiMutex, portMAX_DELAY)) {
+    lcd_PushColors(6, 0, 466, 466, (uint16_t*)sprite.getPointer());
+    xSemaphoreGive(spiMutex);
+  } else {
+    Serial.println("Failed to acquire SPI semaphore!");
+  }
   // delay(500);
   sprite2.deleteSprite();
 }

@@ -49,6 +49,7 @@ TFT_eSprite sprite2 = TFT_eSprite(&tft);
 std::shared_ptr<Arduino_IIC_DriveBus> IIC_Bus =
   std::make_shared<Arduino_HWIIC>(IIC_SDA, IIC_SCL, &Wire);
 #elif defined H0175Y003AM
+xSemaphoreHandle spiMutex;
 TFT_eSPI tft = TFT_eSPI();
 TFT_eSprite sprite = TFT_eSprite(&tft);
 TFT_eSprite sprite2 = TFT_eSprite(&tft);
@@ -167,6 +168,11 @@ void TFT_setup(void) {
   Serial.print("TFT_setup. PSRAM_ENABLE: ");
   Serial.println(sprite.getAttribute(PSRAM_ENABLE));
   sprite.setAttribute(PSRAM_ENABLE, 1);
+  // Initialise SPI Mutex
+  spiMutex = xSemaphoreCreateMutex();
+  if (spiMutex == NULL) {
+      Serial.println("Failed to create SPI mutex!");
+  }
   lcd_setRotation(0); //adjust #define display_column_offset for different rotations
   lcd_brightness(0); // 0-255    
 
@@ -287,20 +293,25 @@ void TFT_Down()
 }
 
 void settings_page() {
-  // lcd_polling_end();
-  delay(50);
-  prev_TFT_view_mode = TFT_view_mode;
-  TFT_view_mode = VIEW_MODE_SETTINGS;
-  sprite.fillSprite(TFT_BLACK);
-  sprite.setTextColor(TFT_WHITE, TFT_BLACK);
-  sprite.setTextDatum(MC_DATUM);
-  sprite.drawString("Settings", LCD_WIDTH / 2, 80, 4);
-  sprite.drawString("Sleep", 233, 360, 4);
-  sprite.drawString("BACK", LCD_WIDTH / 2 - 100, LCD_HEIGHT / 2 + 180, 4);
-  sprite.setSwapBytes(true);
-  sprite.pushImage(320, 330, 48, 47, power_button_small);
-  
-  lcd_PushColors(display_column_offset, 0, 466, 466, (uint16_t*)sprite.getPointer());
-  lcd_brightness(255);
+  if (xSemaphoreTake(spiMutex, portMAX_DELAY)) {
+    delay(50);
+    prev_TFT_view_mode = TFT_view_mode;
+    TFT_view_mode = VIEW_MODE_SETTINGS;
+    sprite.fillSprite(TFT_BLACK);
+    sprite.setTextColor(TFT_WHITE, TFT_BLACK);
+    sprite.setTextDatum(MC_DATUM);
+    sprite.drawString("Settings", LCD_WIDTH / 2, 80, 4);
+    sprite.drawString("Sleep", 233, 360, 4);
+    sprite.drawString("BACK", LCD_WIDTH / 2 - 100, LCD_HEIGHT / 2 + 180, 4);
+    sprite.setSwapBytes(true);
+    sprite.pushImage(320, 330, 48, 47, power_button_small);
+    
+    lcd_PushColors(display_column_offset, 0, 466, 466, (uint16_t*)sprite.getPointer());
+    lcd_brightness(255);
+    xSemaphoreGive(spiMutex);
+} else {
+    Serial.println("Failed to acquire SPI semaphore!");
+}
+
 }
 #endif /* USE_TFT */

@@ -7,6 +7,7 @@
 #include "Speed.h"
 #include "altitude2.h"
 
+extern xSemaphoreHandle spiMutex;
 extern TFT_eSPI tft;
 extern TFT_eSprite sprite;
 TFT_eSprite compasSprite = TFT_eSprite(&tft);
@@ -50,7 +51,12 @@ void TFT_compass_loop() {
         compas2Sprite.setCursor(190, 160, 7);
         compas2Sprite.printf("%d", ThisAircraft.Track, TFT_BLACK);
         compas2Sprite.pushToSprite(&sprite, 0, 0, TFT_BLACK);
-        lcd_PushColors(display_column_offset, 0, 466, 466, (uint16_t*)sprite.getPointer());
+        if (xSemaphoreTake(spiMutex, portMAX_DELAY)) {
+            lcd_PushColors(6, 0, 466, 466, (uint16_t*)sprite.getPointer());
+            xSemaphoreGive(spiMutex);
+          } else {
+            Serial.println("Failed to acquire SPI semaphore!");
+          }
 }
 
 }
