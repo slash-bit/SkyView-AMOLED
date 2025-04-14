@@ -132,7 +132,7 @@ void TFT_draw_text() {
   sprite.fillRoundRect(150, 160, traffic[TFT_current - 1].lastSeen > 120 ? 1 : 170 - traffic[TFT_current - 1].lastSeen * 2, 10, 5, TFT_CYAN);
 
   // sprite.drawString("Vertical", 27, 180, 4);
-  sprite.drawNumber((int)(traffic[TFT_current - 1].fop->RelativeVertical) * 3, 30, 213, 7);
+  sprite.drawNumber((int)(traffic[TFT_current - 1].fop->RelativeVertical) * 3.28, 30, 213, 7);
   
   sprite.drawSmoothArc(233, 233, 230, 225, 0, 360, TFT_DARKGREY, TFT_BLACK, true);
 
@@ -163,21 +163,21 @@ void TFT_draw_text() {
   // sprite.drawWideLine(400, 322, 420, 322, 3, TFT_WHITE);
 
   if (vertical > 55) {
-    sprite.drawSmoothArc(233, 233, 230, 225, 90, vertical > 3000 ? 150 : (90 + vertical / 50), vertical > 500 ? TFT_CYAN : TFT_RED, TFT_BLACK, true);
+    sprite.drawSmoothArc(233, 233, 230, 225, 90, constrain(90 + vertical / 10, 90, 150), vertical > 400 ? TFT_CYAN : TFT_RED, TFT_BLACK, true);
     sprite.drawString("+", 15, 226, 7);
     sprite.drawWideLine(15, 236, 25, 236, 6, TFT_WHITE); //draw plus
     sprite.drawWideLine(20, 231, 20, 241, 6, TFT_WHITE);
   }
   else if (vertical < -55) {
-    sprite.drawSmoothArc(233, 233, 230, 225, abs(vertical) > 3000 ? 150 : 90 - abs(vertical) / 50, 90, vertical < -500 ? TFT_GREEN : TFT_RED, TFT_BLACK, true);
+    sprite.drawSmoothArc(233, 233, 230, 225, constrain(90 - abs(vertical) / 10, 30, 90), 90, vertical < -400 ? TFT_GREEN : TFT_RED, TFT_BLACK, true);
     // sprite.drawWideLine(15, 231, 25, 231, 6, TFT_WHITE); //draw minus
   }
   if (traffic_vario < -0.5) {
-    sprite.drawSmoothArc(233, 233, 230, 225, 270, 270 + abs(traffic_vario) * 12, traffic_vario < 2.5 ? TFT_BLUE : traffic_vario < 1 ? TFT_CYAN : TFT_GREEN, TFT_BLACK, true);
+    sprite.drawSmoothArc(233, 233, 230, 225, 270, constrain(270 + abs(traffic_vario) * 12, 270, 360), traffic_vario < 2.5 ? TFT_BLUE : traffic_vario < 1 ? TFT_CYAN : TFT_GREEN, TFT_BLACK, true);
     
   }
   else if (traffic_vario > 0.3) { //exclude 0 case so not to draw 360 arch
-    sprite.drawSmoothArc(233, 233, 230, 225, 270 - abs(traffic_vario) * 12, 270, traffic_vario > 3.5 ? TFT_RED : traffic_vario > 2 ? TFT_ORANGE : TFT_YELLOW, TFT_BLACK, true);
+    sprite.drawSmoothArc(233, 233, 230, 225, constrain(270 - abs(traffic_vario) * 12, 190, 270), 270, traffic_vario > 3.5 ? TFT_RED : traffic_vario > 2 ? TFT_ORANGE : TFT_YELLOW, TFT_BLACK, true);
   }
   // Lock page
   sprite.drawSmoothRoundRect(lock_x, lock_y, 6, 4, 20, 20, lock_color, TFT_BLACK);

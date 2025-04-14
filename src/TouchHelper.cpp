@@ -7,7 +7,7 @@
 #include "View_Radar_TFT.h"
 #include "Platform_ESP32.h"
 #include "SkyView.h"
-
+#include "EEPROMHelper.h"
 // Create an instance of the CST9217 class
 
 TouchDrvCST92xx touchSensor;
@@ -26,6 +26,9 @@ TaskHandle_t touchTaskHandle = NULL;
 bool IIC_Interrupt_Flag = false;
 unsigned long lastTapTime = 0;
 unsigned long debounceDelay = 100; // in milliseconds
+
+bool wifi_sta = false;
+bool show_compass = true;;
 
 void Touch_setup() {
     // Initialize serial communication for debugging
@@ -52,19 +55,77 @@ void Touch_setup() {
   }
 
 void tapHandler(int x, int y) {
-  //if tap detected near 340 x 370 coordinates and currnet screen is TFT_Text, pu device to deep sleep and wake up button is PIN 0
-  if (x > 100 && x < 150 && y > 50 && y < 110 && (TFT_view_mode == VIEW_MODE_TEXT || TFT_view_mode == VIEW_MODE_RADAR)) {
+  //It looks like the touch sensor is upside down so we need to flip the coordinates
+  //x = LCDWIDTH - x;  
+  //y = LCDHIEGHT - y;
+  Serial.println("Tap detected at coordinates: " + String(x) + ", " + String(y));
+  if (LCD_WIDTH - x > 290 && LCD_WIDTH - x < 400 && LCD_HEIGHT - y > 360 && LCD_HEIGHT - y <  466
+    && (TFT_view_mode == VIEW_MODE_TEXT || TFT_view_mode == VIEW_MODE_RADAR)) {
     Serial.println("Going to SettingsPage ");
     settings_page();
   } 
-  else if (x > 100 && x < 150 && y > 60 && y < 120 && TFT_view_mode == VIEW_MODE_SETTINGS) {
+  else if (LCD_WIDTH - x > 340 && LCD_WIDTH - x < 410 && LCD_HEIGHT - y > 340 && LCD_HEIGHT - y < 415
+    && TFT_view_mode == VIEW_MODE_SETTINGS) {
+    //Sleep device and wake up on button press wake up button is PIN 0
+    Serial.println("Going to Sleep ");
     ESP32_fini();
   } 
-  else if (x > 300 && x < 360 && y > 20 && y < 80 && TFT_view_mode == VIEW_MODE_SETTINGS) {
-    Serial.println("Going Back to Previous Page");
+  else if (LCD_WIDTH - x > 160 && LCD_WIDTH - x < 330 && LCD_HEIGHT - y > 410 && LCD_HEIGHT - y < 466
+    && TFT_view_mode == VIEW_MODE_SETTINGS) {
+    //Back button
+    Serial.println("Going Back to previous page ");
     TFT_Mode(true);
+  } 
+  else if (LCD_WIDTH - x > 320 && LCD_WIDTH - x < 400 && LCD_HEIGHT - y > 110 && LCD_HEIGHT - y < 170
+    && TFT_view_mode == VIEW_MODE_SETTINGS) {
+    //Traffic Filter +- 500m
+    Serial.println("Changing Traffic Filter +- 500m ");
+    if (settings->filter  == TRAFFIC_FILTER_500M) {
+      settings->filter  = TRAFFIC_FILTER_OFF;
+      settings_page();
+    }
+    else {
+      settings->filter  = TRAFFIC_FILTER_500M;
+      settings_page();
+    }
+  } 
+  else if (LCD_WIDTH - x > 320 && LCD_WIDTH - x < 400 && LCD_HEIGHT - y > 227 && LCD_HEIGHT - y < 290 && TFT_view_mode == VIEW_MODE_SETTINGS) {
+    //Radar Orientation North Up / Track Up
+    Serial.println("Changing Radar Orientation North Up / Track Up ");
+    if (settings->orientation  == DIRECTION_NORTH_UP) {
+      settings->orientation  = DIRECTION_TRACK_UP;
+      settings_page();
+    }
+    else {
+      settings->orientation  = DIRECTION_NORTH_UP;
+      settings_page();
+    }
+  } 
+  else if (LCD_WIDTH - x > 320 && LCD_WIDTH - x < 400 && LCD_HEIGHT - y > 290 && LCD_HEIGHT - y < 350 && TFT_view_mode == VIEW_MODE_SETTINGS) {
+    //Enable Wifi Sation Mode
+    Serial.println("Changing Wifi Mode ");
+    if (!wifi_sta) {
+      wifi_sta = true;
+      settings_page();
+    }
+    else {
+      wifi_sta = false;
+      settings_page();
+    }
+  } 
+  else if (LCD_WIDTH - x > 320 && LCD_WIDTH - x < 400 && LCD_HEIGHT - y > 170 && LCD_HEIGHT - y < 230 && TFT_view_mode == VIEW_MODE_SETTINGS) {
+    //Show Compass Page
+    Serial.println("Changing Compass View ");
+    if (!show_compass) {
+      show_compass = true;
+      settings_page();
+    }
+    else {
+      show_compass = false;
+      settings_page();
+    }
   } else {
-    Serial.println("Tap detected at coordinates: " + String(x) + ", " + String(y));
+    Serial.println("No Tap match found...");
   }
 
 

@@ -5,6 +5,7 @@
 #include "EEPROMHelper.h"
 #include "TrafficHelper.h"
 #include "TFTHelper.h"
+#include "WiFiHelper.h"
 // #include <Adafruit_GFX.h>    // Core graphics library
 // #include "Arduino_GFX_Library.h"
 #include "Arduino_DriveBus_Library.h"
@@ -26,6 +27,7 @@ unsigned long TFTTimeMarker = 0;
 bool EPD_display_frontpage = false;
 
 int prev_TFT_view_mode = 0;
+extern bool wifi_sta;
 
 
 
@@ -292,19 +294,88 @@ void TFT_Down()
   }
 }
 
+void settings_button(uint16_t x, uint16_t y, bool on){
+  switch (on) {
+    case true:
+      sprite.fillSmoothRoundRect(x, y - 25, 50, 31, 13, TFT_BLUEBUTTON, TFT_BLACK);
+      sprite.fillSmoothCircle(x + 33, y - 10, 13, TFT_WHITE, TFT_BLUEBUTTON);
+      break;
+    case false:
+      sprite.fillSmoothRoundRect(x, y - 25, 50, 31, 13, TFT_DARKGREY, TFT_BLACK);
+      sprite.fillSmoothCircle(x + 17, y - 10, 13, TFT_LIGHTGREY, TFT_BLUEBUTTON);
+      break;
+    default:
+      break;
+  }
+}
+
 void settings_page() {
   if (xSemaphoreTake(spiMutex, portMAX_DELAY)) {
     delay(50);
-    prev_TFT_view_mode = TFT_view_mode;
-    TFT_view_mode = VIEW_MODE_SETTINGS;
+    if (TFT_view_mode != VIEW_MODE_SETTINGS) {
+      prev_TFT_view_mode = TFT_view_mode; 
+      TFT_view_mode = VIEW_MODE_SETTINGS;}
+    uint16_t button_x = 340;
+    uint16_t text_y = 0;
+  
     sprite.fillSprite(TFT_BLACK);
     sprite.setTextColor(TFT_WHITE, TFT_BLACK);
     sprite.setTextDatum(MC_DATUM);
-    sprite.drawString("Settings", LCD_WIDTH / 2, 80, 4);
-    sprite.drawString("Sleep", 233, 360, 4);
-    sprite.drawString("BACK", LCD_WIDTH / 2 - 100, LCD_HEIGHT / 2 + 180, 4);
+    sprite.setFreeFont(&Orbitron_Light_24);
+    sprite.setCursor(160, 40);
+    sprite.printf("Settings");
+
+    text_y = 140; //bottom of the text
+    sprite.setCursor(button_x - 300, text_y);
+    sprite.printf("Traffic filter 500m");
+    if ( settings->filter  == TRAFFIC_FILTER_500M) {
+      settings_button(button_x, text_y, true);
+    } else {
+      settings_button(button_x, text_y, false); 
+    }
+
+    text_y = 200;
+    sprite.setCursor(button_x - 300, text_y);
+    sprite.printf("Compass Page");
+    if (show_compass) {
+      settings_button(button_x, text_y, true);
+    } else {
+      settings_button(button_x, text_y, false); 
+    }
+    
+    text_y = 260;
+    sprite.setCursor(button_x - 300, text_y);
+    sprite.printf("Radar North Up");
+    if (settings->orientation == DIRECTION_NORTH_UP) {
+      settings_button(button_x, text_y, true);
+    } else {
+      settings_button(button_x, text_y, false); 
+    }
+
+    text_y = 320;
+    sprite.setCursor(button_x - 300, text_y);
+    sprite.printf("Enable Wifi STA");
+
+    if (wifi_sta) {
+      settings_button(button_x, text_y, true);
+
+    } else {
+      settings_button(button_x, text_y, false);
+
+    }
+
+
+    text_y = 400;
+    sprite.setCursor(button_x - 120, 380);
+    sprite.printf("Sleep");
+
+    sprite.setCursor(button_x - 130, 440);
+    sprite.printf("BACK");
+    sprite.fillTriangle(180, 430, 197, 417, 197, 443, TFT_BLUEBUTTON);
+    sprite.fillTriangle(160, 430, 180, 417, 180, 443, TFT_BLUEBUTTON);
+
     sprite.setSwapBytes(true);
-    sprite.pushImage(320, 330, 48, 47, power_button_small);
+    sprite.pushImage(button_x, 350, 48, 47, power_button_small);
     
     lcd_PushColors(display_column_offset, 0, 466, 466, (uint16_t*)sprite.getPointer());
     lcd_brightness(255);
