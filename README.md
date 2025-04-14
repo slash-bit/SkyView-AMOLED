@@ -29,6 +29,9 @@ Displays a dynamic visualization of nearby traffic.
 
 ![SkyView_Radar_Page300x300](https://github.com/user-attachments/assets/a582ca45-425f-4d3f-b65a-485dfb4d9953)
 
+
+![SkyView_Radar_Page_300x300_2](https://github.com/user-attachments/assets/6b980b27-f55a-47da-8d94-9f8d6f9b4d1f)
+
 ---
 
 #### **Traffic Info Page**  
@@ -45,14 +48,14 @@ Provides detailed information on nearby traffic, including individual aircraft v
 ---
 
 #### **Compass Page**  
-A specialized page for orientation and navigation.
+A specialised page for orientation and navigation.
 
 <img src="https://github.com/user-attachments/assets/9613bb03-ed0b-48e4-b963-74c99b9cf339" alt="Compass Page" width="300px">
 
 ---
 
 #### **Settings Page**
-Key added feature is **Settings Page** allowas to change settings "on the fly". Such as Radar View Orientation- North Up or Track Up. Traffic Filtering.
+Key added feature is the **Settings Page** which allows to change settings "on the fly". Such as Radar View Orientation- North Up or Track Up. Traffic Filtering.
 Powering Off the device (Sleep mode).
 
 <img src="https://github.com/user-attachments/assets/874b9fbc-2495-44c0-a77c-07b0165dae16" alt="Settings Page" width="300px">
