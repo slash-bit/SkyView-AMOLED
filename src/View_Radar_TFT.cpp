@@ -44,11 +44,13 @@
 #include "GA.h"
 #include "aircrafts.h"
 #include "aircraft_small.h"
+#include "settings.h"
 // #include <Adafruit_GFX.h> // Include the Adafruit_GFX library
 // #include <Adafruit_ST7789.h> // Include the Adafruit ST7789 library
 
 // extern Adafruit_ST7789 tft;
 //define gfx
+extern xSemaphoreHandle spiMutex;
 extern TFT_eSPI tft;
 extern TFT_eSprite sprite;
 extern TFT_eSprite sprite2;
@@ -87,7 +89,8 @@ const float own_Points[ICON_ARROW_POINTS][2] = {{-6,5},{0,-6},{6,5},{0,2}};
 #endif //ICON_AIRPLANE
 #define ICON_TARGETS_POINTS 5
 const float epd_Target[ICON_TARGETS_POINTS][2] = {{4,4},{0,-6},{-4,4},{-5,-3},{0,2}};
-const float pg_Points[ICON_ARROW_POINTS][2] = {{-12,14},{0,-16},{12,14},{0,4}};
+// const float pg_Points[ICON_ARROW_POINTS][2] = {{-12,14},{0,-16},{12,14},{0,4}};
+const float pg_Points[ICON_ARROW_POINTS][2] = {{-36, 42}, {0, -48}, {36, 42}, {0, 12}};
 
 #define PG_TARGETS_POINTS 3 // triangle
 const float pg_PointsUp[ICON_TARGETS_POINTS][2] = {{-10,8},{10,8},{0,-9}};
@@ -243,19 +246,28 @@ void TFT_radar_Draw_Message(const char *msg1, const char *msg2)
       sprite.drawString(msg1, LCD_WIDTH / 2, LCD_HEIGHT / 2 - 66, 4);
       sprite.drawString(msg2, LCD_WIDTH / 2, LCD_HEIGHT / 2 + 26, 4);
     }
+      //draw settings icon
+    sprite.setSwapBytes(true);
+    sprite.pushImage(320, 360, 36, 36, settings_icon_small);
+    if (xSemaphoreTake(spiMutex, portMAX_DELAY)) {
       lcd_brightness(0);
       lcd_PushColors(display_column_offset, 0, 466, 466, (uint16_t*)sprite.getPointer());
-      for (int i = 0; i <= 255; i++)
-      {
-        lcd_brightness(i);
-          delay(2);
-      }
-      delay(200);
-      for (int i = 255; i >= 0; i--)
-      {
-        lcd_brightness(i);
-          delay(2);
-      }
+        for (int i = 0; i <= 255; i++)
+        {
+          lcd_brightness(i);
+            delay(2);
+        }
+        delay(200);
+        for (int i = 255; i >= 0; i--)
+        {
+          lcd_brightness(i);
+            delay(2);
+        }
+      xSemaphoreGive(spiMutex);
+  } else {
+      Serial.println("Failed to acquire SPI semaphore!");
+  }
+
   }
 }
 
@@ -539,49 +551,37 @@ static void TFT_Draw_Radar()
 
           //   break;
           case 7: //Paraglider -  draw target as triangle
-            sprite_center_y = 18;
             sprite_center_x = 18;
+            sprite_center_y = 18;
+            color = TFT_RED;
             pgSprite.createSprite(36, 36); 
             pgSprite.fillSprite(TFT_BLACK);
             pgSprite.setSwapBytes(1);
             pgSprite.setPivot(18, 18);
-
-            pgSprite.drawWideLine(sprite_center_x + (int) pg_Points[0][0],
-            sprite_center_y + (int) pg_Points[0][1],
-            sprite_center_x + (int) pg_Points[1][0],
-            sprite_center_y + (int) pg_Points[1][1],2,
-            color, TFT_BLACK);
-            pgSprite.drawWideLine(sprite_center_x + (int) pg_Points[1][0],
-            sprite_center_y + (int) pg_Points[1][1],
-            sprite_center_x + (int) pg_Points[2][0],
-            sprite_center_y + (int) pg_Points[2][1],2,
-            color, TFT_BLACK);
-            pgSprite.drawWideLine(sprite_center_x + (int) pg_Points[2][0],
-            sprite_center_y + (int) pg_Points[2][1],
-            sprite_center_x + (int) pg_Points[3][0],
-            sprite_center_y + (int) pg_Points[3][1],2,
-            color, TFT_BLACK);
-            pgSprite.drawWideLine(sprite_center_x + (int) pg_Points[3][0],
-            sprite_center_y + (int) pg_Points[3][1],
-            sprite_center_x + (int) pg_Points[0][0],
-            sprite_center_y + (int) pg_Points[0][1],2,
-            color, TFT_BLACK);
+   
+            // const float pg_Points[ICON_ARROW_POINTS][2] = {{-12,14},{0,-16},{12,14},{0,4}};
+            pgSprite.drawWideLine(6, 32, 18, 2, 2, color, TFT_BLACK);
+            pgSprite.drawWideLine(18, 2, 30, 32, 2, color, TFT_BLACK);
+            pgSprite.drawWideLine(30, 32, 18, 22, 2, color, TFT_BLACK);
+            pgSprite.drawWideLine(18, 22, 6, 32, 2, color, TFT_BLACK);
             if (isTeam) {
               pgSprite.drawSmoothCircle(sprite_center_x,
                 sprite_center_y,
                 14, TFT_LIGHTGREY, TFT_BLACK);
             }
+
+
             sprite.setPivot(radar_center_x + x, radar_center_y - y);
             pgSprite.pushRotated(&sprite, Container[i].Track, TFT_BLACK);
             break;
             case 9: //Aircraft
-            aircraft.createSprite(60, 48);
-            aircraft.setSwapBytes(1);
-            aircraft.fillSprite(TFT_BLACK);
-            aircraft.pushImage(0, 0, 60, 48, aircraft_small);
-            aircraft.setPivot(30, 24);
-            sprite.setPivot(radar_center_x + x, radar_center_y - y);
-            aircraft.pushRotated(&sprite, Container[i].Track, TFT_BLACK);
+              aircraft.createSprite(60, 48);
+              aircraft.setSwapBytes(1);
+              aircraft.fillSprite(TFT_BLACK);
+              aircraft.pushImage(0, 0, 60, 48, aircraft_small);
+              aircraft.setPivot(30, 24);
+              sprite.setPivot(radar_center_x + x, radar_center_y - y);
+              aircraft.pushRotated(&sprite, Container[i].Track, TFT_BLACK);
             break;
           case 11: //Baloon
             sprite.fillSmoothCircle(radar_center_x + x,
@@ -729,7 +729,13 @@ static void TFT_Draw_Radar()
     ownAcrft.pushRotated(&sprite, ThisAircraft.Track, TFT_BLACK);
 
 #endif //ICON_AIRPLANE
-  lcd_PushColors(6, 0, LCD_WIDTH, LCD_HEIGHT, (uint16_t*)sprite.getPointer()); 
+  if (xSemaphoreTake(spiMutex, portMAX_DELAY)) {
+    lcd_PushColors(6, 0, LCD_WIDTH, LCD_HEIGHT, (uint16_t*)sprite.getPointer()); 
+    xSemaphoreGive(spiMutex);
+  } else {
+    Serial.println("Failed to acquire SPI semaphore!");
+  }
+  
 
     }
 }
@@ -839,7 +845,7 @@ void TFT_radar_loop()
     Serial.print("Free heap: ");
     Serial.println(ESP.getFreeHeap());
 #endif /* DEBUG_HEAP */
-    EPDTimeMarker = millis();
+    TFTTimeMarker = millis();
   }
 }
 
@@ -853,9 +859,13 @@ void TFT_radar_zoom()
   sprite2.setSwapBytes(true);
   sprite2.drawString("ZOOM IN", 60, 20, 4);
   sprite2.pushToSprite(&sprite, 173, 120, TFT_BLACK);
-  lcd_PushColors(6, 0, 466, 466, (uint16_t*)sprite.getPointer());
-  sprite2.deleteSprite();
-  // delay(500);
+  if (xSemaphoreTake(spiMutex, portMAX_DELAY)) {
+    lcd_PushColors(6, 0, 466, 466, (uint16_t*)sprite.getPointer());
+    xSemaphoreGive(spiMutex);
+  } else {
+    Serial.println("Failed to acquire SPI semaphore!");
+  }
+  
   sprite2.deleteSprite();
 }
 
@@ -870,7 +880,12 @@ void TFT_radar_unzoom()
   sprite2.drawString("ZOOM OUT", 60, 20, 4);
   
   sprite2.pushToSprite(&sprite, 173, 330, TFT_BLACK);
-  lcd_PushColors(6, 0, 466, 466, (uint16_t*)sprite.getPointer());
+  if (xSemaphoreTake(spiMutex, portMAX_DELAY)) {
+    lcd_PushColors(6, 0, 466, 466, (uint16_t*)sprite.getPointer());
+    xSemaphoreGive(spiMutex);
+  } else {
+    Serial.println("Failed to acquire SPI semaphore!");
+  }
   // delay(500);
   sprite2.deleteSprite();
 }

@@ -28,7 +28,7 @@
 #define SENSOR_RST  8
 
 #define EPD_EXPIRATION_TIME     5 /* seconds */
-#define TFT_EXPIRATION_TIME     60 /* seconds for Text display*/ 
+#define TFT_EXPIRATION_TIME     15 /* seconds for Text display*/ 
 
 #define NO_DATA_TEXT            "NO DATA"
 #define NO_FIX_TEXT             "NO FIX "
@@ -38,7 +38,7 @@
 #define NAVBOX3_TITLE           "SCALE"
 #define NAVBOX4_TITLE           "BAT"
 
-#define isTimeToDisplay()       (millis() - EPDTimeMarker > 2000)
+#define isTimeToDisplay()       (millis() - TFTTimeMarker > 1000)
 #define maxof2(a,b)             (a > b ? a : b)
 
 #define TFT_RADAR_V_THRESHOLD   150      /* metres*/
@@ -91,8 +91,9 @@ void TFT_text_next();
 void TFT_text_prev();
 void TFT_text_Draw_Message(const char *, const char *);
 void TFT_compass_loop();
+void settings_page();
 
-extern unsigned long EPDTimeMarker;
+extern unsigned long TFTTimeMarker;
 extern bool EPD_display_frontpage;
 extern volatile int EPD_task_command;
 

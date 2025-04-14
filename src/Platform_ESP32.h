@@ -162,6 +162,7 @@ typedef struct wavProperties_s {
 extern bool loopTaskWDTEnabled;
 
 extern WebServer server;
+void ESP32_fini();
 
 //#define BUILD_SKYVIEW_HD
 

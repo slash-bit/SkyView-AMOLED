@@ -5,13 +5,15 @@
 #include "TouchHelper.h"
 #include "TFTHelper.h"
 #include "View_Radar_TFT.h"
+#include "Platform_ESP32.h"
+#include "SkyView.h"
 
 // Create an instance of the CST9217 class
 
 TouchDrvCST92xx touchSensor;
 
 uint8_t touchAddress = 0x5A;
-
+extern int TFT_view_mode;
 
 int16_t endX = -1, endY = -1;
 static int16_t startX = -1, startY = -1;
@@ -22,6 +24,8 @@ int16_t currentX[5], currentY[5];
 TaskHandle_t touchTaskHandle = NULL;
 
 bool IIC_Interrupt_Flag = false;
+unsigned long lastTapTime = 0;
+unsigned long debounceDelay = 100; // in milliseconds
 
 void Touch_setup() {
     // Initialize serial communication for debugging
@@ -46,6 +50,25 @@ void Touch_setup() {
   }
   xTaskCreatePinnedToCore(touchTask, "Touch Task", 4096, NULL, 1, &touchTaskHandle, 1);
   }
+
+void tapHandler(int x, int y) {
+  //if tap detected near 340 x 370 coordinates and currnet screen is TFT_Text, pu device to deep sleep and wake up button is PIN 0
+  if (x > 100 && x < 150 && y > 50 && y < 110 && (TFT_view_mode == VIEW_MODE_TEXT || TFT_view_mode == VIEW_MODE_RADAR)) {
+    Serial.println("Going to SettingsPage ");
+    settings_page();
+  } 
+  else if (x > 100 && x < 150 && y > 60 && y < 120 && TFT_view_mode == VIEW_MODE_SETTINGS) {
+    ESP32_fini();
+  } 
+  else if (x > 300 && x < 360 && y > 20 && y < 80 && TFT_view_mode == VIEW_MODE_SETTINGS) {
+    Serial.println("Going Back to Previous Page");
+    TFT_Mode(true);
+  } else {
+    Serial.println("Tap detected at coordinates: " + String(x) + ", " + String(y));
+  }
+
+
+}
 
 
 void touchTask(void *parameter) {
@@ -100,7 +123,14 @@ void touchTask(void *parameter) {
                   TFT_Down();
                 }
               } else if (abs(deltaX) < 50 && abs(deltaY) < 50) {
-                Serial.println("Tap");
+                unsigned long currentTime = millis();
+                if (currentTime - lastTapTime >= debounceDelay) {
+                  lastTapTime = currentTime;
+                  Serial.println("Tap");
+                  delay(100); // Debounce delay
+                  tapHandler(endX, endY); // Call tap handler with coordinates
+              }
+
               }
   
             }
