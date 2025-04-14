@@ -15,7 +15,7 @@ TFT_eSprite compas2Sprite = TFT_eSprite(&tft);
     
 
 void TFT_compass_loop() {
-    if (isTimeToDisplay()) {
+    if (isTimeToDisplay() && show_compass) {
         compasSprite.createSprite(466, 466);
         compas2Sprite.createSprite(466, 466);
         compasSprite.fillSprite(TFT_BLACK);

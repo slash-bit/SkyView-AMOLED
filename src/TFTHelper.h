@@ -96,6 +96,7 @@ void settings_page();
 extern unsigned long TFTTimeMarker;
 extern bool EPD_display_frontpage;
 extern volatile int EPD_task_command;
+extern bool show_compass;
 
 /*
 static const uint8_t PROGMEM sleep_icon_128x128[] = {
