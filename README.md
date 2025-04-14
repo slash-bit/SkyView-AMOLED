@@ -1,24 +1,24 @@
 # SkyView Traffic Awareness Device
 
-SkyView is a traffic awareness device designed to display air traffic received through EC radio devices, such as **SoftRF**, and visualize **FLARM NMEA** or **Garmin GDL90** data on its screen.
+SkyView is a traffic awareness device designed to display air traffic received through EC radio devices, such as **SoftRF SenseCap Card**, and visualize **FLARM NMEA** or **Garmin GDL90** data on its screen.
 
 ### Key Features:
+- Designed fo round AMOLED Colour Display such as 1.75 T-Display by LilyGo.
 - Best suited as a companion device for **SoftRF hardware**, providing user-friendly visualization of nearby traffic.
 - Proven compatibility with **SkyEcho**, **Stratux**, and **PilotAware** devices, as reported by builders.
 
 ### Supported Data Input Methods:
 - **Classic Serial Interface**
 - **Wi-Fi UDP Connection**
-- **Bluetooth SPP**
 - **Bluetooth LE**
 
 ---
 
 ### Enhanced Functionality:
 This is a forked repository of SkyView:
-- **Ported to PlatformIO**: A versatile tool for building and compiling firmware for various devices and screens.
+- **Supported in PlatformIO**: A versatile tool for building and compiling firmware for various devices and screens.
 - **Supports AMOLED Colour Displays**: Optimized for vibrant and high-resolution visualizations.
-- **Page Navigation**: Switching between pages is done effortlessly by swiping **left-right** or **up-down**.
+- **Swipe Page Navigation**: Switching between pages is done effortlessly by swiping **left-right** or **up-down**.
 
 ---
 
@@ -48,5 +48,23 @@ Provides detailed information on nearby traffic, including individual aircraft v
 A specialized page for orientation and navigation.
 
 <img src="https://github.com/user-attachments/assets/9613bb03-ed0b-48e4-b963-74c99b9cf339" alt="Compass Page" width="300px">
+
+---
+
+#### **Settings Page**
+Key added feature is **Settings Page** allowas to change settings "on the fly". Such as Radar View Orientation- North Up or Track Up. Traffic Filtering.
+Powering Off the device (Sleep mode).
+
+<img src="https://github.com/user-attachments/assets/874b9fbc-2495-44c0-a77c-07b0165dae16" alt="Settings Page" width="300px">
+
+
+---
+#### ** 3D Case**
+The case for the 1.75" Display is relativly small even including 600mAh battery, which should last upto 6 hour continious use.
+This version of case is a watch style.
+
+
+<img src="https://github.com/user-attachments/assets/b7e3225d-762a-4fb2-83d3-c82b57f38ba8" alt="3D Case" width="300px">
+
 
 ---
