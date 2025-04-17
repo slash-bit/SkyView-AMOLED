@@ -62,6 +62,7 @@ TFT_eSprite gaSprite = TFT_eSprite(&tft);
 TFT_eSprite Acrft = TFT_eSprite(&tft);
 TFT_eSprite helicopterSprite = TFT_eSprite(&tft);
 TFT_eSprite gliderSprite = TFT_eSprite(&tft);
+TFT_eSprite radarSprite = TFT_eSprite(&tft);
 extern TFT_eSprite batterySprite;
 TFT_eSprite aircraft = TFT_eSprite(&tft);
 
@@ -102,13 +103,13 @@ uint8_t sprite_center_x = 18;
 uint8_t sprite_center_y = 18;
 
 // 2D rotation
-void EPD_2D_Rotate(float &tX, float &tY, float tCos, float tSin)
-{
-    float tTemp;
-    tTemp = tX * tCos - tY * tSin;
-    tY = tX * tSin + tY *  tCos;
-    tX = tTemp;
-}
+// void EPD_2D_Rotate(float &tX, float &tY, float tCos, float tSin)
+// {
+//     float tTemp;
+//     tTemp = tX * tCos - tY * tSin;
+//     tY = tX * tSin + tY *  tCos;
+//     tX = tTemp;
+// }
 #if !defined(ROUND_AMOLED)
 static void EPD_Draw_NavBoxes()
 {
@@ -336,16 +337,11 @@ static void TFT_Draw_Radar()
     }
   }
     // draw range circles
-    // draw range circles in grey
     sprite.drawSmoothCircle(radar_center_x, radar_center_y, radius - 5,   NAVBOX_FRAME_COLOR2, TFT_BLACK);
     sprite.drawSmoothCircle(radar_center_x, radar_center_y, round(radius / 3), NAVBOX_FRAME_COLOR2, TFT_BLACK);
     sprite.drawSmoothCircle(radar_center_x, radar_center_y, round(radius / 3 * 2), NAVBOX_FRAME_COLOR2, TFT_BLACK);
-    //draw crosshair in the center
-    // sprite.drawLine(radar_center_x - 10, radar_center_y, radar_center_x + 10, radar_center_y, NAVBOX_FRAME_COLOR2);
-    // sprite.drawLine(radar_center_x, radar_center_y - 10, radar_center_x, radar_center_y + 10, NAVBOX_FRAME_COLOR2);
 
         //draw distance marker as numbers on radar circles diaganolly from center to bottom right
-    //draw distance marker as numbers on radar circles diaganolly from center to bottom right
     uint16_t circle_mark1_x = radar_center_x + round(radius/3 * 0.7071);
     uint16_t circle_mark1_y = radar_center_y + round(radius/3 * 0.7071);
 
@@ -359,12 +355,8 @@ static void TFT_Draw_Radar()
                     navbox3.value == ZOOM_LOW    ? 6 :
                     navbox3.value == ZOOM_MEDIUM ? 3 :
                     navbox3.value == ZOOM_HIGH   ? 1 : 1);
+    //The distance markers are drawn later in the code, based on Display rotation
 
-    sprite.setCursor(circle_mark1_x, circle_mark1_y);
-    // divide scale by 2 , if resul hs a decimal point, print only point and the decimal
-    sprite.drawString(zoom == 1 ? ".3" : zoom == 3 ? "1" : zoom == 6 ? "2" : "3", circle_mark1_x, circle_mark1_y, 4);   
-    sprite.drawString(zoom == 1 ? ".6" : zoom == 3 ? "2" : zoom == 6 ? "4" : "6", circle_mark2_x, circle_mark2_y, 4); ;
-    sprite.drawNumber(zoom, circle_mark3_x, circle_mark3_y, 4);
 #if defined(DEBUG_HEAP) 
     Serial.print("Free heap: ");
     Serial.println(ESP.getFreeHeap());
@@ -389,28 +381,7 @@ static void TFT_Draw_Radar()
         sprite.drawString("S", x, y, 4);
         break;
     case DIRECTION_TRACK_UP:
-        // draw L, R, B
-        x = radar_x + radar_w / 2 - radius + tbw + 2;
-        y = radar_y + (radar_w + tbh) / 2;
-        sprite.drawString("L", x, y, 4);
-        x = radar_x + radar_w / 2 + radius - tbw - 2;
-        y = radar_y + (radar_w + tbh) / 2;
-        sprite.drawString("R", x, y, 4);
-        // x = radar_x + (radar_w - tbw) / 2;
-        // y = radar_y + radar_w / 2 + radius - tbh / 2;
-        // gfx->setCursor(x, y);
-        // gfx->print("B");
-
-        // draw aircraft heading
-        sprite.setTextColor(TFT_ORANGE, TFT_BLACK);
-        snprintf(cog_text, sizeof(cog_text), "%03d", ThisAircraft.Track);
-        // gfx->getTextBounds(cog_text, 0, 0, &tbx, &tby, &tbw, &tbh);
-        tbw = tft.textWidth(cog_text, 7);
-        tbh = tft.fontHeight(7);
-        x = radar_x + radar_w / 2;
-        y = radar_y + radar_w / 2 - radius + tbh / 2 + 4;
-        sprite.drawSmoothRoundRect(x - tbw /2 - 2, y - tbh /2, 3, 4, tbw + 4, tbh + 4, NAVBOX_FRAME_COLOR2, TFT_BLACK);
-        sprite.drawString(cog_text, x, y, 7);
+        //defined later in the code
         break;
     default:
   /* TBD */
@@ -419,15 +390,15 @@ static void TFT_Draw_Radar()
 
   {
     // Calculating traffic
-    float trSin = sin_approx(-ThisAircraft.Track);
-    float trCos = cos_approx(-ThisAircraft.Track);    
+    // float trSin = sin_approx(-ThisAircraft.Track);
+    // float trCos = cos_approx(-ThisAircraft.Track);    
     for (int i=0; i < MAX_TRACKING_OBJECTS; i++) {
       if (Container[i].ID && (now() - Container[i].timestamp) <= TFT_EXPIRATION_TIME && Container[i].ID != settings->team) {
 
         float rel_x;
         float rel_y;
-        float tgtSin;
-        float tgtCos;
+        // float tgtSin;
+        // float tgtCos;
         float climb;
         int color;
 
@@ -436,14 +407,14 @@ static void TFT_Draw_Radar()
         rel_x = Container[i].RelativeEast;
         rel_y = Container[i].RelativeNorth;
         climb = Container[i].ClimbRate;
-        tgtSin = sin_approx(Container[i].Track);
-        tgtCos = cos_approx(Container[i].Track);
+        // tgtSin = sin_approx(Container[i].Track);
+        // tgtCos = cos_approx(Container[i].Track);
 
-        for (int i=0; i < ICON_TARGETS_POINTS; i++) {
-          epd_Points[i][0] = epd_Target[i][0];
-          epd_Points[i][1] = epd_Target[i][1];
-          EPD_2D_Rotate(epd_Points[i][0], epd_Points[i][1], tgtCos, tgtSin);
-        }
+        // for (int i=0; i < ICON_TARGETS_POINTS; i++) {
+        //   epd_Points[i][0] = epd_Target[i][0];
+        //   epd_Points[i][1] = epd_Target[i][1];
+        //   EPD_2D_Rotate(epd_Points[i][0], epd_Points[i][1], tgtCos, tgtSin);
+        // }
         // for (int i=0; i < PG_TARGETS_POINTS; i++) {
         //   pg_Points[i][0] = pg_Target[i][0];
         //   pg_Points[i][1] = pg_Target[i][1];
@@ -462,21 +433,6 @@ static void TFT_Draw_Radar()
         Serial.print(F(" AcftType="));  Serial.println(Container[i].AcftType);
 
 #endif
-        switch (settings->orientation) {
-          case DIRECTION_NORTH_UP:
-            break;
-          case DIRECTION_TRACK_UP:
-            // rotate relative to ThisAircraft.Track
-            EPD_2D_Rotate(rel_x, rel_y, trCos, trSin);
-            for (int i=0; i < ICON_TARGETS_POINTS; i++)
-               EPD_2D_Rotate(epd_Points[i][0], epd_Points[i][1], trCos, -trSin);
-            for (int i=0; i < PG_TARGETS_POINTS; i++)
-                EPD_2D_Rotate(pg_Points[i][0], pg_Points[i][1], trCos, -trSin);
-            break;
-          default:
-            /* TBD */
-            break;
-        }
 
 #if defined(DEBUG_POSITION)
       Serial.print(F("Debug "));
@@ -660,77 +616,127 @@ static void TFT_Draw_Radar()
                 WHITE);
 #else  //ICON_AIRPLANE
     /* draw arrow tip */
-    for (int i=0; i < ICON_ARROW_POINTS; i++) {
-        epd_Points[i][0] = epd_Arrow[i][0];
-        epd_Points[i][1] = epd_Arrow[i][1];
-    }
-    switch (settings->orientation)
-    {
-    case DIRECTION_NORTH_UP:
-    // rotate relative to ThisAircraft.Track
-    for (int i=0; i < ICON_ARROW_POINTS; i++) {
-      EPD_2D_Rotate(epd_Points[i][0], epd_Points[i][1], trCos, trSin);
-    }
-        break;
-    case DIRECTION_TRACK_UP:
-        break;
-    default:
-        /* TBD */
-        break;
-    }
+    // for (int i=0; i < ICON_ARROW_POINTS; i++) {
+    //     epd_Points[i][0] = epd_Arrow[i][0];
+    //     epd_Points[i][1] = epd_Arrow[i][1];
+    // }
+
     // draw own aircaft
     ownAcrft.createSprite(36, 36);  
     ownAcrft.fillSprite(TFT_BLACK);
     ownAcrft.setPivot(18, 18);
     sprite_center_x = 18;
     sprite_center_y = 18;
-    ownAcrft.drawWideLine(sprite_center_x + 3 * (int) own_Points[0][0],
-    sprite_center_y + 3 * (int) own_Points[0][1],
-    sprite_center_x + 3 * (int) own_Points[1][0],
-    sprite_center_y + 3 * (int) own_Points[1][1],4,
-    TFT_DARKGREY, TFT_DARKGREY);
-    ownAcrft.drawWideLine(sprite_center_x + 3 * (int) own_Points[1][0],
-    sprite_center_y + 3 * (int) own_Points[1][1],
-    sprite_center_x + 3 * (int) own_Points[2][0],
-    sprite_center_y + 3 * (int) own_Points[2][1],4,
-    TFT_DARKGREY, TFT_DARKGREY);
-    ownAcrft.drawWideLine(sprite_center_x + 3 * (int) own_Points[2][0],
-    sprite_center_y + 3 * (int) own_Points[2][1],
-    sprite_center_x + 3 * (int) own_Points[3][0],
-    sprite_center_y + 3 * (int) own_Points[3][1],4,
-    TFT_DARKGREY, TFT_DARKGREY);
-    ownAcrft.drawWideLine(sprite_center_x + 3 * (int) own_Points[3][0],
-    sprite_center_y + 3 * (int) own_Points[3][1],
-    sprite_center_x + 3 * (int) own_Points[0][0],
-    sprite_center_y + 3 * (int) own_Points[0][1],4,
-    TFT_DARKGREY, TFT_DARKGREY);
+    // ownAcrft.drawWideLine(sprite_center_x + 3 * (int) own_Points[0][0],
+    // sprite_center_y + 3 * (int) own_Points[0][1],
+    // sprite_center_x + 3 * (int) own_Points[1][0],
+    // sprite_center_y + 3 * (int) own_Points[1][1],4,
+    // TFT_DARKGREY, TFT_DARKGREY);
+    // ownAcrft.drawWideLine(sprite_center_x + 3 * (int) own_Points[1][0],
+    // sprite_center_y + 3 * (int) own_Points[1][1],
+    // sprite_center_x + 3 * (int) own_Points[2][0],
+    // sprite_center_y + 3 * (int) own_Points[2][1],4,
+    // TFT_DARKGREY, TFT_DARKGREY);
+    // ownAcrft.drawWideLine(sprite_center_x + 3 * (int) own_Points[2][0],
+    // sprite_center_y + 3 * (int) own_Points[2][1],
+    // sprite_center_x + 3 * (int) own_Points[3][0],
+    // sprite_center_y + 3 * (int) own_Points[3][1],4,
+    // TFT_DARKGREY, TFT_DARKGREY);
+    // ownAcrft.drawWideLine(sprite_center_x + 3 * (int) own_Points[3][0],
+    // sprite_center_y + 3 * (int) own_Points[3][1],
+    // sprite_center_x + 3 * (int) own_Points[0][0],
+    // sprite_center_y + 3 * (int) own_Points[0][1],4,
+    // TFT_DARKGREY, TFT_DARKGREY);
         /////// double line
     ownAcrft.drawWideLine(sprite_center_x + 3 * (int) own_Points[0][0],
     sprite_center_y + 3 * (int) own_Points[0][1],
     sprite_center_x + 3 * (int) own_Points[1][0],
     sprite_center_y + 3 * (int) own_Points[1][1],2,
-    TFT_WHITE, TFT_DARKGREY);
+    TFT_WHITE, TFT_BLACK);
     ownAcrft.drawWideLine(sprite_center_x + 3 * (int) own_Points[1][0],
     sprite_center_y + 3 * (int) own_Points[1][1],
     sprite_center_x + 3 * (int) own_Points[2][0],
     sprite_center_y + 3 * (int) own_Points[2][1],2,
-    TFT_WHITE, TFT_DARKGREY); 
+    TFT_WHITE, TFT_BLACK); 
     ownAcrft.drawWideLine(sprite_center_x + 3 * (int) own_Points[2][0],
     sprite_center_y + 3 * (int) own_Points[2][1],
     sprite_center_x + 3 * (int) own_Points[3][0],
     sprite_center_y + 3 * (int) own_Points[3][1],2,
-    TFT_WHITE, TFT_DARKGREY);
+    TFT_WHITE, TFT_BLACK);
     ownAcrft.drawWideLine(sprite_center_x + 3 * (int) own_Points[3][0],
     sprite_center_y + 3 * (int) own_Points[3][1],
     sprite_center_x + 3 * (int) own_Points[0][0],
     sprite_center_y + 3 * (int) own_Points[0][1],2,
-    TFT_WHITE, TFT_DARKGREY);
-    sprite.setPivot(233, 233);                             
-    ownAcrft.pushRotated(&sprite, ThisAircraft.Track, TFT_BLACK);
+    TFT_WHITE, TFT_BLACK);
+    sprite.setPivot(233, 233);      
+    switch (settings->orientation)
+    {
+    case DIRECTION_NORTH_UP:
+        // rotate relative to ThisAircraft.Track
+        ownAcrft.pushRotated(&sprite, ThisAircraft.Track, TFT_BLACK);
+        sprite.setCursor(circle_mark1_x, circle_mark1_y);
+        // divide scale by 2 , if resul hs a decimal point, print only point and the decimal
+        sprite.drawString(zoom == 1 ? ".3" : zoom == 3 ? "1" : zoom == 6 ? "2" : "3", circle_mark1_x, circle_mark1_y, 4);   
+        sprite.drawString(zoom == 1 ? ".6" : zoom == 3 ? "2" : zoom == 6 ? "4" : "6", circle_mark2_x, circle_mark2_y, 4); ;
+        sprite.drawNumber(zoom, circle_mark3_x, circle_mark3_y, 4);
+        break;
+    case DIRECTION_TRACK_UP:
+        radarSprite.createSprite(466, 466);
+        radarSprite.setTextColor(TFT_GREEN, TFT_BLACK);
+        radarSprite.setTextDatum(MC_DATUM);
+        radarSprite.fillSprite(TFT_BLACK);
+        radarSprite.setSwapBytes(true);
+        radarSprite.setColorDepth(16);
+        sprite.pushRotated(&radarSprite, 360 - ThisAircraft.Track, TFT_BLACK);
+        // draw aircraft heading box
+        snprintf(cog_text, sizeof(cog_text), "%03d", ThisAircraft.Track);
+        tbw = tft.textWidth(cog_text, 7);
+        tbh = tft.fontHeight(7);
+        x = radar_x + radar_w / 2;
+        y = radar_y + radar_w / 2 - radius + tbh / 2 + 4;
+        // radarSprite.drawSmoothRoundRect(x - tbw /2 - 2, y - tbh /2, 3, 4, tbw + 4, tbh + 4, NAVBOX_FRAME_COLOR2, TFT_BLACK);
+        radarSprite.drawString(cog_text, x, y, 7);
+
+        // draw L, R letters
+        tbw = tft.textWidth("R", 4);
+        tbh = tft.fontHeight(4);
+        x = radar_x + radar_w / 2 - radius + tbw / 2;
+        y = radar_y + (radar_w + tbh) / 2;
+        radarSprite.drawString("L", x, y, 4);
+        x = radar_x + radar_w / 2 + radius - tbw / 2;
+        y = radar_y + radar_w / 2;
+        radarSprite.drawString("R", x, y, 4);
+        //draw distance markers
+        radarSprite.setCursor(circle_mark1_x, circle_mark1_y);
+        // divide scale by 2 , if resul hs a decimal point, print only point and the decimal
+        radarSprite.drawString(zoom == 1 ? ".3" : zoom == 3 ? "1" : zoom == 6 ? "2" : "3", circle_mark1_x, circle_mark1_y, 4);   
+        radarSprite.drawString(zoom == 1 ? ".6" : zoom == 3 ? "2" : zoom == 6 ? "4" : "6", circle_mark2_x, circle_mark2_y, 4); ;
+        radarSprite.drawNumber(zoom, circle_mark3_x, circle_mark3_y, 4);
+
+        // Draw Own Aircraft
+        ownAcrft.pushRotated(&radarSprite, 0, TFT_BLACK);
+
+        break;
+    default:
+        /* TBD */
+        break;
+    }                       
+    
 
 #endif //ICON_AIRPLANE
   if (xSemaphoreTake(spiMutex, portMAX_DELAY)) {
-    lcd_PushColors(6, 0, LCD_WIDTH, LCD_HEIGHT, (uint16_t*)sprite.getPointer()); 
+    switch (settings->orientation)
+    {
+    case DIRECTION_NORTH_UP:
+      lcd_PushColors(6, 0, LCD_WIDTH, LCD_HEIGHT, (uint16_t*)sprite.getPointer()); 
+      break;
+    case DIRECTION_TRACK_UP:
+      lcd_PushColors(6, 0, LCD_WIDTH, LCD_HEIGHT, (uint16_t*)radarSprite.getPointer()); 
+      break;
+    default:
+      /* TBD */
+      break;
+    }
     xSemaphoreGive(spiMutex);
   } else {
     Serial.println("Failed to acquire SPI semaphore!");

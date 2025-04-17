@@ -5,6 +5,7 @@
 #include "TouchHelper.h"
 #include "TFTHelper.h"
 #include "View_Radar_TFT.h"
+#include "View_Text_TFT.h"
 #include "Platform_ESP32.h"
 #include "SkyView.h"
 #include "EEPROMHelper.h"
@@ -29,6 +30,7 @@ unsigned long debounceDelay = 100; // in milliseconds
 
 bool wifi_sta = false;
 bool show_compass = true;;
+extern bool isLocked;
 
 void Touch_setup() {
     // Initialize serial communication for debugging
@@ -124,6 +126,19 @@ void tapHandler(int x, int y) {
       show_compass = false;
       settings_page();
     }
+  } 
+  else if (LCD_WIDTH - x > 0 && LCD_WIDTH - x < 160 && LCD_HEIGHT - y > 360 && LCD_HEIGHT - y < 420 && TFT_view_mode == VIEW_MODE_TEXT) {
+    //Lock focus on current target
+    Serial.println("Locking focus on current target ");
+    if (!isLocked) {
+      isLocked = true;
+     setFocusOn(false);
+    }
+    else {
+      isLocked = false;
+      setFocusOn(true);
+    }
+    
   } else {
     Serial.println("No Tap match found...");
   }
