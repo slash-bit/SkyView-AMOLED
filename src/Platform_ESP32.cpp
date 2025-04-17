@@ -158,11 +158,13 @@ static uint32_t ESP32_getFlashId()
 
 void ESP32_fini()
 {
-  esp_wifi_stop();
+  // esp_wifi_stop();
   esp_bt_controller_disable();
   SPI.end();
   Serial.println("Putting device to deep sleep...");
   lcd_sleep();
+  EEPROM_store();
+  delay(1000);
   gpio_hold_en(GPIO_NUM_0);
   esp_sleep_enable_ext0_wakeup(SLEEP_WAKE_UP_INT, LOW);
   SPI.end();

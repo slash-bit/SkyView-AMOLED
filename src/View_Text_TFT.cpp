@@ -34,14 +34,22 @@ uint32_t battery = 0;
 uint8_t batteryPercentage = 0;
 uint16_t lock_x = 110;
 uint16_t lock_y = 380;
-bool     isLocked = true;
-uint16_t lock_color = TFT_GREEN;
-uint8_t lock_open = 0;
+bool isLocked = false;
+uint16_t lock_color = TFT_LIGHTGREY;
+
 extern buddy_info_t buddies[];
 const char* buddy_name = " ";
 int   disp_alt, vertical;
+static int32_t focusOn = 0;
 
-
+void setFocusOn(bool on) {
+  if (on) {
+  focusOn = traffic[TFT_current - 1].fop->ID;
+  Serial.printf("Focus on ID: %02X%02X%02X\n", (traffic[TFT_current - 1].fop->ID >> 16) & 0xFF, (traffic[TFT_current - 1].fop->ID >> 8) & 0xFF, (traffic[TFT_current - 1].fop->ID) & 0xFF);      // Extract low byte
+  } else {
+    focusOn = 0;
+  }
+}
 
 void TFT_draw_text() {
   int j=0;
@@ -59,7 +67,16 @@ void TFT_draw_text() {
       traffic[j].climbrate = Container[i].ClimbRate;
       traffic[j].acftType = Container[i].AcftType;
       traffic[j].lastSeen = now() - Container[i].timestamp;
+      if (traffic[j].fop->ID == focusOn) {
+        lock_color = TFT_GREEN;
+        TFT_current = j + 1;
+        Serial.printf("Found focused target, setting page to %d\n", TFT_current);
+      } else {
+        lock_color = TFT_LIGHTGREY;
+      }
+      
       j++;
+
     }
   }
   // uint_fast16_t lastSeen = now() -  Container[i].timestamp;
@@ -70,7 +87,7 @@ void TFT_draw_text() {
     pages = j;
     // snprintf(id2_text, sizeof(id_text), "%02X%02X%02X", (traffic[TFT_current - 1].fop->ID >> 16) & 0xFF, (traffic[TFT_current - 1].fop->ID >> 8) & 0xFF, (traffic[TFT_current - 1].fop->ID) & 0xFF);      // Extract low byte
     snprintf(id2_text, sizeof(id2_text), "ID: %02X%02X%02X", (traffic[TFT_current - 1].fop->ID >> 16) & 0xFF, (traffic[TFT_current - 1].fop->ID >> 8) & 0xFF, (traffic[TFT_current - 1].fop->ID) & 0xFF);      // Extract low byte
-
+   
     if (TFT_current > j) {
       TFT_current = j;
     
@@ -94,7 +111,7 @@ void TFT_draw_text() {
     vertical = (int) traffic[TFT_current - 1].fop->RelativeVertical;
     int disp_alt = (int)((vertical + ThisAircraft.altitude) * 3);  //converting meter to feet
     float traffic_vario = (traffic[TFT_current - 1].climbrate);
-    float speed = (traffic[TFT_current - 1].fop->GroundSpeed);
+    // float speed = (traffic[TFT_current - 1].fop->GroundSpeed);
 
 
 #if defined(DEBUG_CONTAINER)
@@ -181,7 +198,8 @@ void TFT_draw_text() {
   }
   // Lock page
   sprite.drawSmoothRoundRect(lock_x, lock_y, 6, 4, 20, 20, lock_color, TFT_BLACK);
-  sprite.drawArc(lock_x + lock_open + 15, lock_y, 8, 6, 90, 270, lock_color, TFT_BLACK);
+  sprite.drawArc(lock_x + 15, lock_y, 8, 6, 90, 270, lock_color, TFT_BLACK);
+  //Airctafts
   sprite.setSwapBytes(true);
   sprite.pushImage(190, 370, 32, 32, aircrafts);
   sprite.drawNumber(Traffic_Count(), 240, 365, 6);
